@@ -1,9 +1,6 @@
 ---
 title: "Scientific Architect at EDF RD"
 collection: experience
-type: "Workshop"
-permalink: /experience/edf
-venue: "EDF RD"
 date: 2024-09-01
 location: "Saclay, France"
 ---
