@@ -290,20 +290,20 @@ defaults:
       layout: talk
       author_profile: true
       share: true
-  # _experiences
+  # _experience
   - scope:
       path: ""
-      type: experiences
+      type: experience
     values:
-      layout: experience
+      layout: single
       author_profile: true
       share: true
-  # _educations
+  # _education
   - scope:
       path: ""
-      type: educations
+      type: education
     values:
-      layout: education
+      layout: single
       author_profile: true
       share: true
   # _skills
@@ -311,7 +311,7 @@ defaults:
       path: ""
       type: skills
     values:
-      layout: skill
+      layout: single
       author_profile: true
       share: true
     
