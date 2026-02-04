@@ -5,12 +5,6 @@ date: 2022-02-01
 location: "Paris, France"
 ---
 
-
-EN_short
-======
-* In charge of several teams of Data engineers, DevOps engineers, Software engineers
-* Conducted the technical validation of developments
-
 EN_long
 ======
 * In charge of several teams of Data engineers, DevOps engineers, Software engineers
@@ -22,6 +16,11 @@ EN_long
 * Contributed to the architecture design of a online platform
 * Technical documentation for follow-up
 
+EN_short
+======
+* In charge of several teams of Data engineers, DevOps engineers, Software engineers
+* Conducted the technical validation of developments
+  
 FR_short
 ======
 Travail sur les systèmes backend avec Rust et PostgreSQL.
