@@ -1,9 +1,10 @@
 ---
-title = "Technical Project Manager at Meritis"
+title: "Technical Project Manager at Meritis"
 collection: experience
-date = 2022-02-01 
+date: 2022-02-01 
 location: "Paris, France"
 ---
+
 
 EN_short
 ======
