@@ -38,10 +38,10 @@ author:
   googlescholar    : #"https://scholar.google.com/citations?user=PS_CX0AAAAAJ"
   inspire-hep      : # URL
   impactstory      : # URL
-  orcid            : "https://orcid.org/yourorcidurl"
+  orcid            : # URL
   semantic         : # URL
   ssrn             : # URL
-  pubmed           : "https://www.ncbi.nlm.nih.gov/pubmed/?term=john+snow"
+  pubmed           : # URL
   researchgate     : # URL
   scopus           : # URL
   zotero           : # URL
@@ -90,6 +90,8 @@ publication_category:
     title: 'Journal Articles'    
   conferences:
     title: 'Conference Papers'
+  mooc:
+    title: "Online Courses"
 
 # Site Settings
 teaser                   :  # filename of teaser fallback teaser image placed in /images/ for social media previews
@@ -234,6 +236,12 @@ collections:
     output: true
     permalink: /:collection/:path/
   experience:
+    output: true
+    permalink: /:collection/:path/
+  education:
+    output: true
+    permalink: /:collection/:path/
+  skills:
     output: true
     permalink: /:collection/:path/
 
