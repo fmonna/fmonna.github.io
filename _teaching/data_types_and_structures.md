@@ -8,4 +8,4 @@ date: 2012-10-01 - 2024-06-15
 location: "Paris, France"
 ---
 
-Data Types and Structures, Discrete Mathematics for Computer Science.
+Bachelor, 2 nd year CS : Data Types and Structures, Discrete Mathematics for Computer Science.
