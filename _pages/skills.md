@@ -1,3 +1,9 @@
+---
+title: "Skills"
+sitemap: false
+permalink: /skills.html
+---
+
 # Languages
 French (native speaker), English (fluent), German and Italian (notions)
 
