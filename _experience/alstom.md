@@ -1,6 +1,7 @@
 ---
 title: "Research Intern in the ''Blackout Team'' of ALSTOM Grid"
-date: 2011
+date: 01-02-2011 to 30-09-2011
+collection: experience
 en_short: "Worked on backend systems using Rust and PostgreSQL"
 ---
 
