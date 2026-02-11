@@ -1,6 +1,7 @@
 ---
 title: "Research Engineer for Total RD"
-date: 2017-04-01 to 2018-09-30
+startdate: 2017-04-01 
+enddate: 2018-09-30
 collection: experience
 location: "Lemont, IL, USA"
 en_short: "Worked on backend systems using Rust and PostgreSQL"
