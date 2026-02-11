@@ -44,9 +44,9 @@
           <p>Published in <i>{{ post.venue }}</i>, {{ post.date | default: "1900-01-01" | date: "%Y" }} </p>
         {% elsif post.collection == 'experience' %}
           {% if post.enddate %}
-            <p><time datetime="{{ post.startdate | date_to_xmlschema }}">{{ post.startdate | default: "1900-01-01" | date: "%B %d, %Y" }}</time> to <time datetime="{{ post.enddate | date_to_xmlschema }}">{{ post.enddate | default: "1900-01-01" | date: "%B %d, %Y" }}</time> </p>
+            <p class="page__date"><i class="fa fa-fw fa-calendar" aria-hidden="true"></i> {{ site.data.ui-text[site.locale].date_label | default: "From:" }}<time datetime="{{ post.startdate | date_to_xmlschema }}">{{ post.startdate | default: "1900-01-01" | date: "%B %d, %Y" }}</time> {{ site.data.ui-text[site.locale].date_label | default: "to:" }}<time datetime="{{ post.enddate | date_to_xmlschema }}">{{ post.enddate | default: "1900-01-01" | date: "%B %d, %Y" }}</time> </p>
           {% elsif post.startdate %}
-            <p> {{ post.startdate | default: "1900-01-01" | date: "%B %d, %Y" }} </p>
+            <p class="page__date"><i class="fa fa-fw fa-calendar" aria-hidden="true"></i> {{ site.data.ui-text[site.locale].date_label | default: "Since:" }}<time datetime="{{ post.startdate | date_to_xmlschema }}">{{ post.startdate | default: "1900-01-01" | date: "%B %d, %Y" }}</time> </p>
           {% endif %}
         {% elsif post.date %}
          <p class="page__date"><strong><i class="fa fa-fw fa-calendar" aria-hidden="true"></i> {{ site.data.ui-text[site.locale].date_label | default: "Published:" }}</strong> <time datetime="{{ post.date | default: "1900-01-01" | date_to_xmlschema }}">{{ post.date | default: "1900-01-01" | date: "%B %d, %Y" }}</time></p>
