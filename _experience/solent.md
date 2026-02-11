@@ -1,6 +1,7 @@
 ---
 title: "Software Engineer at Solent SAS"
-date: 2015 to 2017
+collection: experience
+date: 01-02-2015 to 15-03-2017
 en_short: "Worked on backend systems using Rust and PostgreSQL"
 ---
 
