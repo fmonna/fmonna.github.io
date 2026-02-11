@@ -39,7 +39,7 @@ layout: default
         {% elsif page.collection == 'experience' %}
           {% if page.enddate %}
             <p><time datetime="{{ page.startdate | date_to_xmlschema }}">{{ page.startdate | default: "1900-01-01" | date: "%B %d, %Y" }}</time> to <time datetime="{{ page.enddate | date_to_xmlschema }}">{{ page.enddate | default: "1900-01-01" | date: "%B %d, %Y" }}</time> </p>
-          {% elif page.startdate %}
+          {% elsif page.startdate %}
             <p> {{ page.startdate | default: "1900-01-01" | date: "%Y" }} </p>
           {% endif %}
         {% elsif page.venue and page.date %}
