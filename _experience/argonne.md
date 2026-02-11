@@ -1,6 +1,7 @@
 ---
 title: "Lead Software Engineer at Argonne National Laboratory"
-date: 2018-10-15 to 2021-09-30
+startdate: 2018-10-15 
+enddate: 2021-09-30
 collection: experience
 location: "Lemont, IL, USA"
 en_short: "Worked on backend systems using Rust and PostgreSQL"
