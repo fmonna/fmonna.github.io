@@ -1,7 +1,7 @@
 ---
 title: "Scientific Architect at EDF RD"
 collection: experience
-date: 2024-09-01
+startdate: 2024-09-01
 location: "Saclay, France"
 en_short: "Worked on backend systems using Rust and PostgreSQL"
 ---
