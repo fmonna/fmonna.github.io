@@ -1,7 +1,7 @@
 ---
 title: "Technical Project Manager at Meritis"
 collection: experience
-date: 2022-02-01 
+date: 2022-02-01 to 2024-08-31
 location: "Paris, France"
 en_short: "* In charge of several teams of Data engineers, DevOps engineers, Software engineers
            * Conducted the technical validation of developments"
