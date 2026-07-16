@@ -1,0 +1,145 @@
+# Deploy the Dioxus site (site/) to GitHub Pages.
+#
+# Strategy: "Pages artifact (Actions)" cutover. This workflow builds the
+# prerendered Dioxus site from site/, uploads public/ as a Pages artifact, and
+# GitHub Pages is switched to "deploy from a GitHub Actions workflow" — which
+# fully replaces the classic Jekyll build that currently serves from `master`.
+#
+# SSG note: in this crate `default = ["web"]` (not `fullstack`), so
+# `dx bundle --web --ssg` builds clean but does NOT run the pre-crawl — only
+# the CSR loader index.html is written. The prerendered pages are produced by
+# running the server binary and requesting each URL returned by the
+# /static_routes server function; the IncrementalRenderer (clear_cache(false))
+# caches each served route to public/<route>/index.html. Steps below script
+# exactly that. See memory note `dioxus-ssg-bundle-crawl`.
+
+name: Deploy Dioxus site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/deploy-dioxus.yml'
+  # Allow manual runs from the Actions tab.
+  workflow_dispatch:
+
+# Grant only what this workflow needs: read the repo, write one Pages deploy.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deploy at a time; cancel superseded runs in-flight.
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo registry + git
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-${{ runner.os }}-${{ hashFiles('site/Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-
+
+      - name: Cache site target
+        uses: actions/cache@v4
+        with:
+          path: site/target
+          key: dioxus-target-${{ runner.os }}-${{ hashFiles('site/Cargo.lock', 'site/Cargo.toml', 'site/src/**') }}
+          restore-keys: |
+            dioxus-target-${{ runner.os }}-
+
+      - name: Install dx CLI (dioxus-cli 0.7.9)
+        # Compiles from source (~3-5 min) but is fully reproducible and
+        # platform-agnostic — no prebuilt-binary asset URL dependency.
+        run: cargo install dioxus-cli --locked --version 0.7.9
+
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Build the bundle (WASM client + server binary + loader)
+        # --fullstack so the server binary (with the ISRG renderer) is built.
+        # --ssg is passed for completeness but does not pre-crawl in this
+        # config; the crawl step below produces the per-route HTML.
+        env:
+          CARGO_BUILD_JOBS: "3"
+        run: dx bundle --web --fullstack --ssg
+
+      - name: Prerender routes by crawling the server
+        # Run the server, fetch every URL from /static_routes, let the
+        # IncrementalRenderer cache each to public/<route>/index.html.
+        env:
+          CARGO_BUILD_JOBS: "3"
+        run: |
+          set -euo pipefail
+          PUB="$(pwd)/target/dx/fmonna-site/debug/web/public"
+          SRV="$(pwd)/target/dx/fmonna-site/debug/web/server"
+          echo "Server binary: $SRV"
+          echo "Public dir:    $PUB"
+
+          # Start the server in the background.
+          RUST_LOG=warn "$SRV" > server.log 2>&1 &
+          SRV_PID=$!
+
+          # Wait for it to accept connections (max ~30s).
+          for _ in $(seq 1 60); do
+            if curl -sf -o /dev/null http://127.0.0.1:8080/; then break; fi
+            if ! kill -0 "$SRV_PID" 2>/dev/null; then
+              echo "Server exited early:"; cat server.log; exit 1
+            fi
+            sleep 0.5
+          done
+
+          # Enumerate routes and crawl each. The ISRG renderer writes
+          # public/<route>/index.html for every URL fetched.
+          ROUTES=$(curl -sf -X POST http://127.0.0.1:8080/api/static_routes \
+                   -H 'content-type: application/json' -d '[]')
+          echo "static_routes: $ROUTES"
+
+          for r in $(printf '%s' "$ROUTES" | tr -d '[]"' | tr ',' ' '); do
+            code=$(curl -sf -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080${r}")
+            echo "  GET ${r} -> ${code}"
+            [ "$code" = "200" ] || { echo "non-200 for ${r}"; kill "$SRV_PID" 2>/dev/null || true; exit 1; }
+          done
+
+          # Stop the server now that every route is cached.
+          kill "$SRV_PID" 2>/dev/null || true
+          wait "$SRV_PID" 2>/dev/null || true
+
+          echo "Prerendered HTML files:"
+          find "$PUB" -name '*.html' | sort
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/target/dx/fmonna-site/debug/web/public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
