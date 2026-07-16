@@ -1,0 +1,27 @@
+[package]
+name = "fmonna-site"
+version = "0.1.0"
+edition = "2021"
+# The Dioxus 0.7 fullstack template pins a toolchain via this field; we leave it
+# off so CI and local builds use whatever stable rustup provides (>= 1.85).
+# rust-version = "1.85"
+
+[dependencies]
+# `fullstack` enables both the web (client/WASM) and server renderers and is
+# required for SSG prerendering (see site/src/main.rs + the static_routes server fn).
+# `router` enables the #[derive(Routable)] navigation used by every page.
+# Pinned to the 0.7 line (latest stable 0.7.9 as of 2026-07).
+dioxus = { version = "0.7", features = ["fullstack", "router"] }
+
+# Server-only deps are gated behind the `server` feature so they are not pulled
+# into the WASM client build. The `server`/`web` features below are what `dx`
+# toggles when it splits a fullstack app into its two cargo builds.
+tokio = { version = "1", optional = true }
+
+[features]
+default = ["web"]
+# Client build target (WASM). `dx bundle --web` compiles with --features web.
+web = ["dioxus/web"]
+# Server build target (native). Required for SSG: the static_routes server fn
+# and the incremental renderer run server-side.
+server = ["dioxus/server", "dep:tokio"]

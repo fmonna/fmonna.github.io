@@ -1,0 +1,25 @@
+# Dioxus 0.7 project config — schema matched to the `dx new` Bare-Bones template.
+# `dx bundle --web --ssg` reads this to build and emit the prerendered static site.
+# Docs: https://dioxuslabs.com/learn/0.7/essentials/fullstack/static_site_generation/
+
+[application]
+# Asset directories hot-reloaded into the bundle. Mirrors the dx `new` template.
+asset_dir = "assets"
+
+[web.app]
+# HTML title tag content. Updated when content lands.
+title = "Florence Monna"
+
+# GitHub Pages serves a user site from the root (https://fmonna.github.io/), so
+# "/" is correct. If this ever moves to a project page, set this to "/<repo>/".
+base_path = "/"
+
+[web.resource]
+# CSS/JS are linked via the asset!() macro in src/main.rs (the 0.7 convention),
+# so these arrays stay empty.
+style = []
+script = []
+
+[web.resource.dev]
+# Dev-server-only JS. None needed.
+script = []

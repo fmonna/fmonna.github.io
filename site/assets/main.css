@@ -1,0 +1,49 @@
+/* Florence Monna — site styles. Minimal, content-first. */
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.55;
+  --accent: #13506b;
+}
+@media (prefers-color-scheme: dark) { :root { --accent: #6cc4e0; } }
+body { margin: 0; padding: 0 1rem 4rem; max-width: 48rem; margin-inline: auto; }
+nav.lang-toggle { text-align: right; padding: 0.75rem 0 0; }
+nav.lang-toggle button {
+  font: inherit; cursor: pointer; padding: 0.15rem 0.5rem; margin-left: 0.25rem;
+  border: 1px solid #8886; background: transparent; color: inherit; border-radius: 4px;
+}
+nav.lang-toggle button:disabled { opacity: 0.4; cursor: default; }
+nav.site-nav { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; border-bottom: 1px solid #8884; padding-bottom: 1rem; }
+nav.site-nav a { text-decoration: none; color: inherit; }
+nav.site-nav a:hover { color: var(--accent); text-decoration: underline; }
+nav.site-nav a.active { font-weight: 700; color: var(--accent); }
+footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #8884; font-size: 0.85rem; opacity: 0.7; }
+
+/* Home */
+.home-header h1 { margin: 0.2rem 0; font-size: 2rem; }
+.home-header .title { margin: 0 0 0.6rem; color: var(--accent); font-weight: 600; }
+.home-header .contact { font-style: normal; font-size: 0.9rem; }
+.home-header .contact a { color: inherit; }
+p.lead { margin-top: 1.5rem; }
+
+/* Timeline (experience / education) */
+section.timeline { display: flex; flex-direction: column; gap: 1.75rem; }
+article.entry { border-left: 2px solid var(--accent); padding-left: 1rem; }
+.entry-head h2 { margin: 0 0 0.2rem; font-size: 1.15rem; }
+.entry-head .org { font-weight: 600; }
+.entry-head .loc { opacity: 0.75; }
+.entry-head .period { display: block; font-size: 0.85rem; color: var(--accent); margin-top: 0.15rem; }
+.entry-body ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+.entry-body li { margin: 0.2rem 0; }
+
+/* Skills / Publications prose blocks */
+.prose h2 { font-size: 1.1rem; margin: 1.4rem 0 0.3rem; border-bottom: 1px solid #8884; padding-bottom: 0.2rem; }
+.prose h3 { font-size: 1rem; margin: 1rem 0 0.2rem; }
+.prose p { margin: 0.3rem 0; }
+.pub-note { font-size: 0.85rem; opacity: 0.7; font-style: italic; }
+
+/* FR-draft notice */
+.fr-draft-notice {
+  font-size: 0.8rem; opacity: 0.8; border: 1px dashed #8886;
+  padding: 0.4rem 0.7rem; border-radius: 4px; margin: 0.5rem 0 1.25rem;
+}
