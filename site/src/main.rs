@@ -24,7 +24,10 @@
 use dioxus::prelude::*;
 
 mod content;
-use content::{Entry, Lang, PROFILE, PUBLICATIONS, PUBLICATIONS_DRAFT, SKILLS, SKILLS_DRAFT, EDUCATION, EXPERIENCE};
+use content::{
+    ARCHIVE, BLOG, EDUCATION, Entry, EXPERIENCE, Lang, PORTFOLIO, PROFILE, PUBLICATIONS,
+    PUBLICATIONS_DRAFT, SKILLS, SKILLS_DRAFT, TALKS, TEACHING,
+};
 
 // Assets are registered with the `asset!()` macro (the 0.7 convention) and
 // linked from the document below. They get hashed/cache-busted at build time.
@@ -103,6 +106,16 @@ enum Route {
     Experience {},
     #[route("/education")]
     Education {},
+    #[route("/teaching")]
+    Teaching {},
+    #[route("/talks")]
+    Talks {},
+    #[route("/portfolio")]
+    Portfolio {},
+    #[route("/blog")]
+    Blog {},
+    #[route("/archive")]
+    Archive {},
     #[route("/skills")]
     Skills {},
     #[route("/publications")]
@@ -183,6 +196,102 @@ fn Education() -> Element {
             for e in EDUCATION.iter() {
                 ExperienceItem { entry: *e, lang }
             }
+        }
+    }
+}
+
+#[component]
+fn Teaching() -> Element {
+    let lang = *LANG.read();
+    rsx! {
+        h1 { { match lang { Lang::En => "Teaching", Lang::Fr => "Enseignement" } } }
+        FrDraftNotice { lang, draft: TEACHING.iter().any(|e| e.fr_draft) }
+        section { class: "timeline",
+            for e in TEACHING.iter() {
+                ExperienceItem { entry: *e, lang }
+            }
+        }
+    }
+}
+
+#[component]
+fn Talks() -> Element {
+    let lang = *LANG.read();
+    rsx! {
+        h1 { { match lang { Lang::En => "Talks", Lang::Fr => "Exposés" } } }
+        FrDraftNotice { lang, draft: TALKS.iter().any(|e| e.fr_draft) }
+        section { class: "timeline",
+            for e in TALKS.iter() {
+                ExperienceItem { entry: *e, lang }
+            }
+        }
+    }
+}
+
+#[component]
+fn Portfolio() -> Element {
+    let lang = *LANG.read();
+    rsx! {
+        h1 { { match lang { Lang::En => "Portfolio", Lang::Fr => "Portfolio" } } }
+        FrDraftNotice { lang, draft: PORTFOLIO.iter().any(|e| e.fr_draft) }
+        section { class: "cards",
+            for e in PORTFOLIO.iter() {
+                EntryCard { entry: *e, lang }
+            }
+        }
+    }
+}
+
+#[component]
+fn Blog() -> Element {
+    let lang = *LANG.read();
+    rsx! {
+        h1 { { match lang { Lang::En => "Blog", Lang::Fr => "Blog" } } }
+        FrDraftNotice { lang, draft: BLOG.iter().any(|e| e.fr_draft) }
+        section { class: "cards",
+            for e in BLOG.iter() {
+                EntryCard { entry: *e, lang }
+            }
+        }
+    }
+}
+
+#[component]
+fn Archive() -> Element {
+    let lang = *LANG.read();
+    rsx! {
+        h1 { { match lang { Lang::En => "Archive", Lang::Fr => "Archives" } } }
+        FrDraftNotice { lang, draft: ARCHIVE.iter().any(|e| e.fr_draft) }
+        section { class: "cards",
+            for e in ARCHIVE.iter() {
+                EntryCard { entry: *e, lang }
+            }
+        }
+    }
+}
+
+/// Lighter card variant for portfolio/blog/archive entries: heading + period,
+/// an optional org/location line (hidden when both are empty — e.g. a blog
+/// post carries only a title), then the body. Same `Entry` shape as the
+/// timeline items, just laid out without the left accent rail.
+#[component]
+fn EntryCard(entry: Entry, lang: Lang) -> Element {
+    let org = entry.org;
+    let loc = entry.location.pick(lang);
+    rsx! {
+        article { class: "card",
+            div { class: "entry-head",
+                h2 { { entry.heading.pick(lang) } }
+                span { class: "period", { format_period(entry.start, entry.end, lang) } }
+            }
+            if !org.is_empty() || !loc.is_empty() {
+                p { class: "meta",
+                    if !org.is_empty() { span { class: "org", { org } } }
+                    if !org.is_empty() && !loc.is_empty() { span { " · " } }
+                    if !loc.is_empty() { span { class: "loc", { loc } } }
+                }
+            }
+            div { class: "entry-body", dangerous_inner_html: entry.body(lang) }
         }
     }
 }
@@ -282,6 +391,11 @@ fn SiteNav() -> Element {
             Link { to: Route::Home {},         { label("Home", "Accueil") } }
             Link { to: Route::Experience {},   { label("Experience", "Expérience") } }
             Link { to: Route::Education {},    { label("Education", "Formation") } }
+            Link { to: Route::Teaching {},     { label("Teaching", "Enseignement") } }
+            Link { to: Route::Talks {},        { label("Talks", "Exposés") } }
+            Link { to: Route::Portfolio {},    { label("Portfolio", "Portfolio") } }
+            Link { to: Route::Blog {},         { label("Blog", "Blog") } }
+            Link { to: Route::Archive {},      { label("Archive", "Archives") } }
             Link { to: Route::Skills {},       { label("Skills", "Compétences") } }
             Link { to: Route::Publications {}, { label("Publications", "Publications") } }
             Link { to: Route::Cv {},           "CV" }
@@ -321,30 +435,39 @@ fn profile_loc(key: &str) -> content::LStr {
     content::LStr { en, fr: if fr.is_empty() { en } else { fr } }
 }
 
-/// Format a YYYY-MM (or YYYY) start/end pair as a human range, bilingual.
+/// Format a start/end pair as a human range, bilingual. Each endpoint may be
+/// YYYY, YYYY-MM, or YYYY-MM-DD (the teaching entries use full ISO dates). An
+/// empty `end` means "current".
 fn format_period(start: &str, end: &str, lang: Lang) -> String {
-    let fmt = |ym: &str| -> String {
-        // "2024-09" -> "Sep 2024"; "2024" -> "2024"; anything else -> as-is.
-        let bytes = ym.as_bytes();
-        if ym.len() >= 7 && bytes[4] == b'-' {
-            let (y, m) = ym.split_at(4);
-            let m = &m[1..];
-            let name = month_name(m, lang);
-            format!("{} {}", name, y)
-        } else {
-            ym.to_string()
-        }
-    };
-    let s = fmt(start);
+    let s = format_date(start, lang);
     let e = if end.is_empty() {
         match lang {
             Lang::En => "present".to_string(),
             Lang::Fr => "présent".to_string(),
         }
     } else {
-        fmt(end)
+        format_date(end, lang)
     };
     format!("{} — {}", s, e)
+}
+
+/// Format a single date as "Sep 2024" / "sept. 2024". Accepts YYYY (-> "2024"),
+/// YYYY-MM, or YYYY-MM-DD; anything unparseable is returned as-is.
+fn format_date(ym: &str, lang: Lang) -> String {
+    let bytes = ym.as_bytes();
+    // YYYY-MM[-DD] — take the year and the two-digit month, ignore the day.
+    if ym.len() >= 7 && bytes[4] == b'-' {
+        let year = &ym[..4];
+        let month = &ym[5..7];
+        let name = month_name(month, lang);
+        if name.is_empty() {
+            year.to_string()
+        } else {
+            format!("{} {}", name, year)
+        }
+    } else {
+        ym.to_string()
+    }
 }
 
 fn month_name(m: &str, lang: Lang) -> &'static str {

@@ -1,9 +1,5 @@
 # fmonna-site
 
-Dioxus 0.7 fullstack + router skeleton for Florence Monna's personal site.
-This is a scaffold — pages are empty placeholders; content migration from the
-LaTeX source (`../Florence_Resume/*.tex`) into a Markdown schema is a follow-up.
-
 ## Stack
 
 - **Dioxus 0.7** (`fullstack` + `router` features) — reactive Rust UI, compiled to WASM for the client.

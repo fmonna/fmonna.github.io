@@ -33,32 +33,30 @@ fn main() {
     let skills = parse_file(&content_dir.join("skills.md"));
     let publications = parse_file(&content_dir.join("publications.md"));
 
-    let mut experience: Vec<Entry> = content_dir
-        .join("experience")
-        .read_dir()
-        .expect("content/experience dir")
-        .flatten()
-        .filter(|e| e.path().extension().is_some_and(|x| x == "md"))
-        .filter_map(|e| parse_entry(&e.path()))
-        .collect();
-    experience.sort_by_key(|e| std::cmp::Reverse(e.order));
-
-    let mut education: Vec<Entry> = content_dir
-        .join("education")
-        .read_dir()
-        .expect("content/education dir")
-        .flatten()
-        .filter(|e| e.path().extension().is_some_and(|x| x == "md"))
-        .filter_map(|e| parse_entry(&e.path()))
-        .collect();
-    education.sort_by_key(|e| std::cmp::Reverse(e.order));
+    // Each collection is a directory of one-entry-per-file Markdown. They all
+    // load the same way; `load_entries` also sorts newest-first by period.end
+    // (NOT the `order:` field) so the site timeline matches the CV/LaTeX order
+    // and adding a new job doesn't require renumbering anything. See the note
+    // in tools/gen_cv.py for the rationale.
+    let experience = load_entries(&content_dir, "experience");
+    let education = load_entries(&content_dir, "education");
+    let teaching = load_entries(&content_dir, "teaching");
+    let talks = load_entries(&content_dir, "talks");
+    let blog = load_entries(&content_dir, "blog");
+    let portfolio = load_entries(&content_dir, "portfolio");
+    let archive = load_entries(&content_dir, "archive");
 
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let out_path = PathBuf::from(&out_dir).join("content_gen.rs");
     println!(
-        "cargo:warning=content_gen: {} experience, {} education entries",
+        "cargo:warning=content_gen: {} experience, {} education, {} teaching, {} talks, {} blog, {} portfolio, {} archive",
         experience.len(),
-        education.len()
+        education.len(),
+        teaching.len(),
+        talks.len(),
+        blog.len(),
+        portfolio.len(),
+        archive.len(),
     );
     fs::write(&out_path, render_module(&Module {
         profile,
@@ -66,8 +64,84 @@ fn main() {
         publications,
         experience,
         education,
+        teaching,
+        talks,
+        blog,
+        portfolio,
+        archive,
     }))
     .expect("write content_gen.rs");
+
+/// Load and date-sort one collection directory (e.g. "experience"). Each
+/// `.md` file parses to an `Entry`; the vec is sorted newest-first by
+/// `period.end` (null/present first), tie-broken by `period.start` desc, then
+/// by filesystem order for stability. The `order:` frontmatter field is read
+/// into the Entry but is NOT used for sorting — it is retained only so the
+/// generated `Entry { order, .. }` literal stays populated.
+fn load_entries(content_dir: &Path, subdir: &str) -> Vec<Entry> {
+    let mut entries: Vec<Entry> = content_dir
+        .join(subdir)
+        .read_dir()
+        .unwrap_or_else(|e| panic!("read content/{} dir: {}", subdir, e))
+        .flatten()
+        .filter(|e| e.path().extension().is_some_and(|x| x == "md"))
+        .filter_map(|e| parse_entry(&e.path()))
+        .collect();
+    // Stable sort by (end desc, start desc). `end` null/present sorts newest.
+    entries.sort_by(|a, b| {
+        let ea = period_end_key(&a.front);
+        let eb = period_end_key(&b.front);
+        eb.cmp(&ea)
+            .then_with(|| period_start_key(&a.front).cmp(&period_start_key(&b.front)))
+    });
+    entries
+}
+
+/// Sort key for a period.end value. Null/absent/empty/"null" (=> current)
+/// sorts newest (max); a year-month "2024-09" becomes (2024, 9); a bare year
+/// "2024" becomes (2024, 0). Anything unparseable sorts oldest (0, 0).
+fn period_end_key(front: &Yaml) -> (i64, i64) {
+    let period = front.get("period").unwrap_or(&Yaml::Null);
+    period_sort_key(period.get("end").unwrap_or(&Yaml::Null), true)
+}
+
+fn period_start_key(front: &Yaml) -> (i64, i64) {
+    let period = front.get("period").unwrap_or(&Yaml::Null);
+    period_sort_key(period.get("start").unwrap_or(&Yaml::Null), false)
+}
+
+/// `(year, month)` sort key for a period endpoint. When `present_is_newest` is
+/// true, a null/empty value (current job) maps to `(i64::MAX, 99)` so it sorts
+/// first under descending order; otherwise (a missing start) it maps to
+/// `(0, 0)` so it sorts last.
+fn period_sort_key(v: &Yaml, present_is_newest: bool) -> (i64, i64) {
+    let s = match v {
+        Yaml::Str(s) => s.as_str(),
+        Yaml::Int(i) => {
+            // bare year (e.g. 2014) parsed as Int — treat as year-only
+            let y = *i;
+            return (y, 0);
+        }
+        Yaml::Null => "",
+        _ => return (0, 0),
+    };
+    let s = s.trim();
+    if s.is_empty() || s.eq_ignore_ascii_case("null") || s == "~" {
+        return if present_is_newest { (i64::MAX, 99) } else { (0, 0) };
+    }
+    // "2024-09" -> (2024, 9)
+    let bytes = s.as_bytes();
+    if s.len() >= 7 && bytes[4] == b'-' {
+        let year = s[..4].parse::<i64>().unwrap_or(0);
+        let month = s[5..7].parse::<i64>().unwrap_or(0);
+        return (year, month);
+    }
+    // bare year as a string
+    if let Ok(y) = s.parse::<i64>() {
+        return (y, 0);
+    }
+    (0, 0)
+}
 }
 
 // --- emitted data model ----------------------------------------------------
@@ -78,6 +152,11 @@ struct Module {
     publications: Yaml,
     experience: Vec<Entry>,
     education: Vec<Entry>,
+    teaching: Vec<Entry>,
+    talks: Vec<Entry>,
+    blog: Vec<Entry>,
+    portfolio: Vec<Entry>,
+    archive: Vec<Entry>,
 }
 
 /// Extract the (en, fr, fr_draft) triple from a bilingual prose file
@@ -130,8 +209,29 @@ fn render_module(m: &Module) -> String {
     for e in &m.education {
         emit_entry(&mut s, e);
     }
-    s.push_str("];\n");
+    s.push_str("];\n\n");
+
+    // The remaining collections all use the same Entry shape; `emit_entry` is
+    // generic over role/degree + venue + period + summary, so teaching/talks/
+    // blog/portfolio/archive all render through it. `venue` may be a scalar
+    // (experience `company`) or an EN/FR map (teaching/talks `venue`); both are
+    // handled inside emit_entry.
+    emit_collection(&mut s, "TEACHING", &m.teaching);
+    emit_collection(&mut s, "TALKS", &m.talks);
+    emit_collection(&mut s, "BLOG", &m.blog);
+    emit_collection(&mut s, "PORTFOLIO", &m.portfolio);
+    emit_collection(&mut s, "ARCHIVE", &m.archive);
     s
+}
+
+fn emit_collection(s: &mut String, name: &str, entries: &[Entry]) {
+    s.push_str("pub static ");
+    s.push_str(name);
+    s.push_str(": &[Entry] = &[\n");
+    for e in entries {
+        emit_entry(s, e);
+    }
+    s.push_str("];\n\n");
 }
 
 fn emit_profile(s: &mut String, p: &Yaml) {
@@ -184,11 +284,24 @@ fn emit_entry(s: &mut String, e: &Entry) {
 
     let degree_en = e.front.get("degree").and_then(|r| r.get("en")).and_then(|v| v.as_str());
     let degree_fr = e.front.get("degree").and_then(|r| r.get("fr")).and_then(|v| v.as_str());
-    let head_en = degree_en.unwrap_or(role_en);
-    let head_fr = degree_fr.filter(|x| !x.is_empty()).unwrap_or(degree_en.unwrap_or(role_fr));
+    // Blog entries carry `title` instead of `role`/`degree`; fall through to it
+    // so a blog post's heading is the post title rather than empty.
+    let title_en = e.front.get("title").and_then(|r| r.get("en")).and_then(|v| v.as_str());
+    let title_fr = e.front.get("title").and_then(|r| r.get("fr")).and_then(|v| v.as_str());
+    let head_en = degree_en.or(title_en).unwrap_or(role_en);
+    let head_fr = degree_fr
+        .filter(|x| !x.is_empty())
+        .or_else(|| title_fr.filter(|x| !x.is_empty()))
+        .unwrap_or(degree_en.or(title_en).unwrap_or(role_fr));
 
+    // `org` (the Entry.org field) is a single string, not bilingual. Experience
+    // uses a scalar `company`; teaching/talks/portfolio/archive use `venue`,
+    // which may be a scalar OR an EN/FR map. Prefer `company`, then `venue`
+    // scalar, then `venue.en`. The FR org falls back to the EN form (org names
+    // like "Sorbonnes University — UPMC" are usually un-translated).
     let company = e.front.get("company").and_then(|v| v.as_str()).unwrap_or("");
-    let venue = e.front.get("venue").and_then(|v| v.as_str()).unwrap_or("");
+    let venue = e.front.get("venue").and_then(|v| v.as_str())
+        .unwrap_or_else(|| e.front.get("venue").and_then(|v| v.get("en")).and_then(|v| v.as_str()).unwrap_or(""));
 
     let loc_en = e.front.get("location").and_then(|l| l.get("en")).and_then(|v| v.as_str()).unwrap_or("");
     let loc_fr = e.front.get("location").and_then(|l| l.get("fr")).and_then(|v| v.as_str()).filter(|x| !x.is_empty()).unwrap_or(loc_en);
@@ -197,13 +310,18 @@ fn emit_entry(s: &mut String, e: &Entry) {
     let (start, end) = period_range(&period);
 
     let summary = e.front.get("summary").cloned().unwrap_or(Yaml::Null);
-    let long_en = summary.get("en.long").and_then(|v| v.as_str()).unwrap_or("");
-    let long_fr = summary.get("fr.long").and_then(|v| v.as_str()).filter(|x| !x.is_empty()).unwrap_or("");
+    // Body resolution with a `.short` fallback: prefer the long form, fall back
+    // to the short form (used by teaching/talks/portfolio entries that only
+    // carry a one-line summary). FR falls back to its own short, then to EN.
+    let long_en = summary.get("en.long").and_then(|v| v.as_str()).filter(|x| !x.is_empty())
+        .unwrap_or_else(|| summary.get("en.short").and_then(|v| v.as_str()).unwrap_or(""));
+    let long_fr = summary.get("fr.long").and_then(|v| v.as_str()).filter(|x| !x.is_empty())
+        .unwrap_or_else(|| summary.get("fr.short").and_then(|v| v.as_str()).filter(|x| !x.is_empty()).unwrap_or(""));
     let fr_draft = summary.get("fr_draft").and_then(|v| v.as_bool()).unwrap_or(false);
 
     // Education entries use a different schema: thesis / honors / specialization
     // (each an EN/FR LStr) plus an optional `courses` list (of LStr maps). When
-    // there's no `summary.en.long` body, synthesize one in Markdown from those
+    // there's no summary body at all, synthesize one in Markdown from those
     // fields so the education page isn't blank.
     let (long_en, long_fr) = if long_en.is_empty() {
         education_body(&e.front)

@@ -36,6 +36,15 @@ article.entry { border-left: 2px solid var(--accent); padding-left: 1rem; }
 .entry-body ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
 .entry-body li { margin: 0.2rem 0; }
 
+/* Cards (portfolio / blog / archive) — same entry shape, no timeline rail */
+section.cards { display: flex; flex-direction: column; gap: 1.75rem; }
+article.card { padding-left: 0; border-left: none; }
+article.card .entry-head h2 { margin: 0 0 0.1rem; font-size: 1.15rem; }
+article.card .entry-head .period { display: block; font-size: 0.85rem; color: var(--accent); margin-top: 0.1rem; }
+article.card .meta { margin: 0 0 0.3rem; font-size: 0.9rem; }
+article.card .meta .org { font-weight: 600; }
+article.card .meta .loc { opacity: 0.75; }
+
 /* Skills / Publications prose blocks */
 .prose h2 { font-size: 1.1rem; margin: 1.4rem 0 0.3rem; border-bottom: 1px solid #8884; padding-bottom: 0.2rem; }
 .prose h3 { font-size: 1rem; margin: 1rem 0 0.2rem; }
