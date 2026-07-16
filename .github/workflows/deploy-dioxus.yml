@@ -42,7 +42,7 @@ jobs:
       run:
         working-directory: site
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -50,7 +50,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Cache cargo registry + git
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -60,7 +60,7 @@ jobs:
             cargo-${{ runner.os }}-
 
       - name: Cache site target
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: site/target
           key: dioxus-target-${{ runner.os }}-${{ hashFiles('site/Cargo.lock', 'site/Cargo.toml', 'site/src/**') }}
@@ -74,7 +74,7 @@ jobs:
 
       - name: Configure GitHub Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Build the bundle (WASM client + server binary + loader)
         # --fullstack so the server binary (with the ISRG renderer) is built.
@@ -129,7 +129,7 @@ jobs:
           find "$PUB" -name '*.html' | sort
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site/target/dx/fmonna-site/debug/web/public
 
