@@ -10,10 +10,7 @@
 
 ```sh
 rustup target add wasm32-unknown-unknown
-# dx CLI — prebuilt binary from the v0.7.9 release:
-curl -fsSL -o /tmp/dx.tar.gz \
-  https://github.com/DioxusLabs/dioxus/releases/download/v0.7.9/dx-aarch64-unknown-linux-gnu.tar.gz
-tar -xzf /tmp/dx.tar.gz -C ~/.cargo/bin dx
+cargo install dioxus-cli --locked --version 0.7.9
 dx --version   # dioxus 0.7.9
 ```
 

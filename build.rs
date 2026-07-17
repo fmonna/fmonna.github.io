@@ -185,6 +185,15 @@ fn render_module(m: &Module) -> String {
     emit_profile(&mut s, &m.profile);
     s.push_str("];\n\n");
 
+    // Home-page intro prose: a bilingual LStr reusing the same prose path as
+    // SKILLS/PUBLICATIONS (top-level `en`/`fr` block scalars in profile.md).
+    s.push_str("pub static PROFILE_INTRO: LStr = ");
+    emit_prose(&mut s, &m.profile);
+    s.push_str(";\n");
+    s.push_str("pub static PROFILE_INTRO_DRAFT: bool = ");
+    s.push_str(if prose_yaml(&m.profile).2 { "true" } else { "false" });
+    s.push_str(";\n\n");
+
     s.push_str("pub static SKILLS: LStr = ");
     emit_prose(&mut s, &m.skills);
     s.push_str(";\n");

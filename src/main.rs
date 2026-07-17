@@ -25,8 +25,8 @@ use dioxus::prelude::*;
 
 mod content;
 use content::{
-    ARCHIVE, BLOG, EDUCATION, Entry, EXPERIENCE, Lang, PORTFOLIO, PROFILE, PUBLICATIONS,
-    PUBLICATIONS_DRAFT, SKILLS, SKILLS_DRAFT, TALKS, TEACHING,
+    ARCHIVE, BLOG, EDUCATION, Entry, EXPERIENCE, Lang, PORTFOLIO, PROFILE, PROFILE_INTRO,
+    PROFILE_INTRO_DRAFT, PUBLICATIONS, PUBLICATIONS_DRAFT, SKILLS, SKILLS_DRAFT, TALKS, TEACHING,
 };
 
 // Assets are registered with the `asset!()` macro (the 0.7 convention) and
@@ -108,6 +108,10 @@ enum Route {
     Education {},
     #[route("/teaching")]
     Teaching {},
+    #[route("/skills")]
+    Skills {},
+    #[route("/publications")]
+    Publications {},
     #[route("/talks")]
     Talks {},
     #[route("/portfolio")]
@@ -116,10 +120,6 @@ enum Route {
     Blog {},
     #[route("/archive")]
     Archive {},
-    #[route("/skills")]
-    Skills {},
-    #[route("/publications")]
-    Publications {},
     #[route("/cv")]
     Cv {},
 }
@@ -148,12 +148,8 @@ fn Home() -> Element {
                 "{location}"
             }
         }
-        p { class: "lead",
-            { match lang {
-                Lang::En => "HPC architect, research engineer and project manager. Explore the sections above for my experience, education, skills and publications.",
-                Lang::Fr => "Architecte HPC, ingénieure de recherche et cheffe de projet. Parcourez les sections ci-dessus pour mon expérience, ma formation, mes compétences et mes publications.",
-            } }
-        }
+        FrDraftNotice { lang, draft: PROFILE_INTRO_DRAFT }
+        div { class: "prose", dangerous_inner_html: PROFILE_INTRO.pick(lang) }
     }
 }
 
@@ -178,7 +174,12 @@ fn ExperienceItem(entry: Entry, lang: Lang) -> Element {
             div { class: "entry-head",
                 h2 { { entry.heading.pick(lang) } }
                 span { class: "org", { entry.org } }
-                span { class: "loc", { entry.location.pick(lang) } }
+                if !entry.org.is_empty() && !entry.location.pick(lang).is_empty() {
+                    span { " · " }
+                }
+                if !entry.location.pick(lang).is_empty() {
+                    span { class: "loc", { entry.location.pick(lang) } }
+                }
                 span { class: "period", { format_period(entry.start, entry.end, lang) } }
             }
             div { class: "entry-body", dangerous_inner_html: entry.body(lang) }
@@ -218,7 +219,7 @@ fn Teaching() -> Element {
 fn Talks() -> Element {
     let lang = *LANG.read();
     rsx! {
-        h1 { { match lang { Lang::En => "Talks", Lang::Fr => "Exposés" } } }
+        h1 { { match lang { Lang::En => "Talks", Lang::Fr => "Talks" } } }
         FrDraftNotice { lang, draft: TALKS.iter().any(|e| e.fr_draft) }
         section { class: "timeline",
             for e in TALKS.iter() {
@@ -388,16 +389,19 @@ fn SiteNav() -> Element {
     };
     rsx! {
         nav { class: "site-nav",
+            // Populated sections first…
             Link { to: Route::Home {},         { label("Home", "Accueil") } }
             Link { to: Route::Experience {},   { label("Experience", "Expérience") } }
             Link { to: Route::Education {},    { label("Education", "Formation") } }
             Link { to: Route::Teaching {},     { label("Teaching", "Enseignement") } }
-            Link { to: Route::Talks {},        { label("Talks", "Exposés") } }
-            Link { to: Route::Portfolio {},    { label("Portfolio", "Portfolio") } }
-            Link { to: Route::Blog {},         { label("Blog", "Blog") } }
-            Link { to: Route::Archive {},      { label("Archive", "Archives") } }
             Link { to: Route::Skills {},       { label("Skills", "Compétences") } }
             Link { to: Route::Publications {}, { label("Publications", "Publications") } }
+            // …then placeholder sections (still only seeded sample entries),
+            // dimmed so visitors see they're not yet populated.
+            Link { to: Route::Talks {},        class: "draft", { label("Talks", "Exposés") } }
+            Link { to: Route::Portfolio {},    class: "draft", { label("Portfolio", "Portfolio") } }
+            Link { to: Route::Blog {},         class: "draft", { label("Blog", "Blog") } }
+            Link { to: Route::Archive {},      class: "draft", { label("Archive", "Archives") } }
             Link { to: Route::Cv {},           "CV" }
         }
     }
