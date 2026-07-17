@@ -2,8 +2,8 @@
 
 Florence's resume content lives here in Markdown. It feeds **two** outputs:
 
-1. **The Dioxus site** (`site/src`) — reads these files, renders EN/FR bilingual pages.
-2. **The Typst PDFs** (`site/typst`, not yet built) — generates two CVs:
+1. **The Dioxus site** (`src/`) — reads these files, renders EN/FR bilingual pages.
+2. **The Typst PDFs** (`tools/`, see `tools/gen_cv.py` + `tools/cv.template.typ`) — generates two CVs:
    - EN full CV — uses `en.long` bodies.
    - FR 2-page CV — uses `fr.short` bodies (tighter).
 

@@ -6,7 +6,7 @@
 #   tools/cv.template.typ  shared Typst template (render-cv)
 #   typst compile        cv-{en,fr}.typ → cv-{en,fr}.pdf
 #
-# Usage:  ./tools/build_cvs.sh        (from the site/ dir)
+# Usage:  ./tools/build_cvs.sh        (from the repo root)
 set -euo pipefail
 
 # Resolve the site dir from this script's location so it runs from anywhere.

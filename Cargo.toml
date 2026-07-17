@@ -8,7 +8,7 @@ edition = "2021"
 
 [dependencies]
 # `fullstack` enables both the web (client/WASM) and server renderers and is
-# required for SSG prerendering (see site/src/main.rs + the static_routes server fn).
+# required for SSG prerendering (see src/main.rs + the static_routes server fn).
 # `router` enables the #[derive(Routable)] navigation used by every page.
 # Pinned to the 0.7 line (latest stable 0.7.9 as of 2026-07).
 dioxus = { version = "0.7", features = ["fullstack", "router"] }

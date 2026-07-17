@@ -1,9 +1,10 @@
-# Deploy the Dioxus site (site/) to GitHub Pages.
+# Deploy the Dioxus site to GitHub Pages.
 #
 # Strategy: "Pages artifact (Actions)" cutover. This workflow builds the
-# prerendered Dioxus site from site/, uploads public/ as a Pages artifact, and
-# GitHub Pages is switched to "deploy from a GitHub Actions workflow" — which
-# fully replaces the classic Jekyll build that currently serves from `master`.
+# prerendered Dioxus site from the repo root, uploads public/ as a Pages
+# artifact, and GitHub Pages is switched to "deploy from a GitHub Actions
+# workflow" — which fully replaces the classic Jekyll build that currently
+# serves from `master`.
 #
 # SSG note: in this crate `default = ["web"]` (not `fullstack`), so
 # `dx bundle --web --ssg` builds clean but does NOT run the pre-crawl — only
@@ -19,7 +20,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'site/**'
+      - 'src/**'
+      - 'content/**'
+      - 'assets/**'
+      - 'build.rs'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'Dioxus.toml'
       - '.github/workflows/deploy-dioxus.yml'
   # Allow manual runs from the Actions tab.
   workflow_dispatch:
@@ -38,9 +45,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: site
     steps:
       - uses: actions/checkout@v6
 
@@ -55,15 +59,14 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: cargo-${{ runner.os }}-${{ hashFiles('site/Cargo.lock') }}
+          key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
             cargo-${{ runner.os }}-
-
-      - name: Cache site target
+      - name: Cache target
         uses: actions/cache@v6
         with:
-          path: site/target
-          key: dioxus-target-${{ runner.os }}-${{ hashFiles('site/Cargo.lock', 'site/Cargo.toml', 'site/src/**') }}
+          path: target
+          key: dioxus-target-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'src/**', 'build.rs') }}
           restore-keys: |
             dioxus-target-${{ runner.os }}-
 
@@ -131,7 +134,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: site/target/dx/fmonna-site/debug/web/public
+          path: target/dx/fmonna-site/debug/web/public
 
   deploy:
     needs: build
