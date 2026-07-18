@@ -100,6 +100,21 @@ jobs:
           echo "Server binary: $SRV"
           echo "Public dir:    $PUB"
 
+          # Set `<html lang="en">` on the HTML shell `dx bundle` generated.
+          # dx emits a bare `<html>`; the server reads `public/index.html` as
+          # the SSR shell (dioxus-server-0.7.9 src/config.rs ServeConfig::new),
+          # so patching it here means every prerendered route — what Pages
+          # serves on first paint — carries the correct language for screen
+          # readers and FR hyphenation. The client `use_effect` in Layout()
+          # then keeps `lang` in sync when the EN/FR toggle is clicked after
+          # hydration. (`IndexHtml` is crate-private, so this can't be done
+          # from main.rs; the file patch is the supported seam.)
+          SHELL="$PUB/index.html"
+          if [ -f "$SHELL" ] && ! grep -q '<html lang=' "$SHELL"; then
+            sed -i 's#<html>#<html lang="en">#' "$SHELL"
+            echo "Patched <html lang=\"en\"> into $SHELL"
+          fi
+
           # Start the server in the background.
           RUST_LOG=warn "$SRV" > server.log 2>&1 &
           SRV_PID=$!

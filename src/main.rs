@@ -32,6 +32,7 @@ use content::{
 // Assets are registered with the `asset!()` macro (the 0.7 convention) and
 // linked from the document below. They get hashed/cache-busted at build time.
 const MAIN_CSS: Asset = asset!("/assets/main.css");
+const PORTRAIT: Asset = asset!("/assets/images/portrait.jpg");
 
 fn main() {
     // LaunchBuilder (not the bare `dioxus::launch`) lets us attach server-only
@@ -78,10 +79,31 @@ fn app() -> Element {
 /// contain exactly one `Outlet::<Route> {}`, which renders the matched page.
 #[component]
 fn Layout() -> Element {
+    // Keep the document's `<html lang>` in sync with the language toggle. The
+    // toggle flips a client-side `GlobalSignal`, but the static `<html lang="en">`
+    // baked into the shell never changes on its own — without this, FR pages are
+    // read as English by screen readers and FR hyphenation never engages. SSG
+    // prerenders each route with the default `Lang::En`, so the static HTML is
+    // correct on first paint; this effect then corrects it live after a toggle.
+    //
+    // `document::eval` runs a JS string in the WASM client (the same `document`
+    // module the stylesheet `<link>` below uses). `use_effect` is client-only —
+    // it does not run during SSG prerender, so the prerendered HTML is untouched.
+    use_effect(move || {
+        let code = match *LANG.read() {
+            Lang::En => "en",
+            Lang::Fr => "fr",
+        };
+        let _ = document::eval(&format!(
+            "document.documentElement.setAttribute('lang', {code:?});"
+        ));
+    });
+
     rsx! {
+        a { href: "#main", class: "skip-link", "Skip to content" }
         LanguageToggle {}
         SiteNav {}
-        main { Outlet::<Route> {} }
+        main { id: "main", Outlet::<Route> {} }
         footer { p { "© 2026 Florence Monna" } }
     }
 }
@@ -137,13 +159,6 @@ fn Home() -> Element {
     let github = profile_str("github");
     let scholar = profile_str("scholar");
     let orcid = profile_str("orcid");
-    // Monogram initials for the placeholder portrait (a real photo replaces this
-    // SVG later). Decorative — no role/aria-label, the name <h1> is the label.
-    let initials: String = name
-        .split_whitespace()
-        .filter_map(|w| w.chars().next())
-        .take(2)
-        .collect();
 
     rsx! {
         header { class: "home-header",
@@ -188,20 +203,12 @@ fn Home() -> Element {
                 }
             }
             div { class: "home-portrait",
-                svg {
-                    class: "portrait-svg",
-                    view_box: "0 0 100 100",
-                    circle { cx: "50", cy: "50", r: "49", fill: "none", stroke: "var(--accent)", stroke_width: "2" }
-                    text {
-                        x: "50", y: "50",
-                        text_anchor: "middle",
-                        dominant_baseline: "central",
-                        fill: "var(--accent)",
-                        font_size: "40",
-                        font_family: "system-ui, sans-serif",
-                        font_weight: "600",
-                        "{initials}"
-                    }
+                img {
+                    class: "portrait",
+                    src: PORTRAIT,
+                    alt: "Portrait of {name}",
+                    width: "160",
+                    height: "160",
                 }
             }
         }

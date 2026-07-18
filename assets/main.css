@@ -1,81 +1,218 @@
-/* Florence Monna — site styles. Minimal, content-first. */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap');
+
+/* Florence Monna — site styles. "Editorial refined": serif display (Fraunces)
+ * over a sans body (Inter), navy + blue on warm paper, a gradient hero band,
+ * hairline cards with a subtle hover lift. Pure-CSS redesign — no content or
+ * build changes.
+ *
+ * Fonts: Fraunces loads from Google Fonts via @import above (the dx-generated
+ * shell already imports Inter the same way), and falls back to a serif stack
+ * if the CDN is unreachable. Inter comes from the shell + the system stack. */
+
 :root {
   color-scheme: light dark;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  line-height: 1.55;
-  --accent: #13506b;
-}
-@media (prefers-color-scheme: dark) { :root { --accent: #6cc4e0; } }
-body { margin: 0; padding: 0 1rem 4rem; max-width: 48rem; margin-inline: auto; }
-nav.lang-toggle { text-align: right; padding: 0.75rem 0 0; }
-nav.lang-toggle button {
-  font: inherit; cursor: pointer; padding: 0.15rem 0.5rem; margin-left: 0.25rem;
-  border: 1px solid #8886; background: transparent; color: inherit; border-radius: 4px;
-}
-nav.lang-toggle button:disabled { opacity: 0.4; cursor: default; }
-nav.site-nav { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; border-bottom: 1px solid #8884; padding-bottom: 1rem; }
-nav.site-nav a { text-decoration: none; color: inherit; }
-nav.site-nav a:hover { color: var(--accent); text-decoration: underline; }
-nav.site-nav a.active { font-weight: 700; color: var(--accent); }
-/* Placeholder sections (only seeded sample entries so far): dimmed, not hidden. */
-nav.site-nav a.draft { opacity: 0.45; }
-nav.site-nav a.draft.active { opacity: 0.85; }
-footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #8884; font-size: 0.85rem; opacity: 0.7; }
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
 
-/* Home */
-.home-header { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.5rem; }
+  --navy: #0b2545;
+  --blue: #1d6fe0;      /* accents, rules, focus, selection, gradient */
+  --link: #0b4f9c;      /* readable text links on paper (AA) */
+  --ink: #1a1f2e;       /* body text */
+  --ink-soft: #5b6472;  /* secondary text */
+  --paper: #f7f5f0;     /* page background (warm) */
+  --card: #ffffff;      /* card / panel background */
+  --rule: #e2ded4;      /* hairlines */
+  --hero-from: #0b2545;
+  --hero-to: #1d6fe0;
+  --shadow: 0 6px 18px rgba(11, 37, 69, 0.08);
+
+  font-family: var(--font-body);
+  line-height: 1.65;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #081a36;
+    --card: #0f2d52;
+    --ink: #e8edf2;
+    --ink-soft: #9fb0c4;
+    --rule: #1f3a5f;
+    --blue: #6cc4e0;
+    --link: #7cc4ed;
+    --hero-from: #081a36;
+    --hero-to: #16407a;
+    --shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  }
+}
+
+body {
+  margin: 0; padding: 0 1.25rem 5rem;
+  max-width: 48rem; margin-inline: auto;
+  background: var(--paper); color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--blue); color: var(--paper); }
+
+/* Headings — serif display. */
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; line-height: 1.2; color: var(--ink); }
+
+/* Page title: serif with a short blue accent rule beneath (the editorial
+ * signature). Applies to the <h1> on every section page; the home hero <h1>
+ * is overridden below. */
+h1 { font-size: 2.2rem; letter-spacing: -0.01em; margin: 0 0 1.75rem; }
+h1::after {
+  content: ""; display: block; width: 3rem; height: 3px;
+  background: var(--blue); margin-top: 0.6rem; border-radius: 2px;
+}
+
+/* Skip-to-content link: off-screen until keyboard-focused, then visible.
+ * Ink/paper pair keeps it high-contrast in both themes. */
+.skip-link {
+  position: absolute; left: -999px; top: 0; z-index: 100;
+  background: var(--ink); color: var(--paper); padding: 0.5rem 0.9rem;
+  border-radius: 0 0 6px 6px; text-decoration: none; font-weight: 600;
+}
+.skip-link:focus { left: 0; }
+
+/* Language toggle (top-right). Active side is a solid ink pill. */
+nav.lang-toggle { text-align: right; padding: 0.75rem 0 1rem; }
+nav.lang-toggle button {
+  font: inherit; cursor: pointer; padding: 0.2rem 0.65rem; margin-left: 0.3rem;
+  border: 1px solid var(--rule); background: var(--card); color: var(--ink-soft);
+  border-radius: 6px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em;
+  transition: color 0.15s, border-color 0.15s;
+}
+nav.lang-toggle button:hover:not(:disabled) { color: var(--ink); border-color: var(--blue); }
+nav.lang-toggle button:disabled { background: var(--ink); color: var(--paper); border-color: var(--ink); cursor: default; }
+
+/* Primary nav — hairline rule beneath, blue active state. */
+nav.site-nav {
+  display: flex; gap: 1.1rem; flex-wrap: wrap;
+  margin-bottom: 2.25rem; padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--rule); font-size: 0.95rem;
+}
+nav.site-nav a { text-decoration: none; color: var(--ink-soft); transition: color 0.15s; }
+nav.site-nav a:hover { color: var(--blue); }
+nav.site-nav a.active { font-weight: 600; color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
+/* Placeholder sections (not yet populated): dimmed, not hidden. */
+nav.site-nav a.draft { opacity: 0.5; }
+nav.site-nav a.draft.active { opacity: 0.9; }
+
+footer { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--ink-soft); }
+
+/* Home — gradient hero band. White text + white-ringed portrait on a
+ * navy→blue gradient (deep navy→mid blue in dark mode so white stays legible). */
+.home-header {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 2rem;
+  background: linear-gradient(135deg, var(--hero-from) 0%, var(--hero-to) 100%);
+  color: #fff; padding: 2.25rem; border-radius: 14px; margin-bottom: 2rem;
+}
 .home-header .home-text { flex: 1 1 18rem; min-width: 0; }
 .home-header .home-portrait { flex: 0 0 auto; }
-.home-portrait .portrait-svg { display: block; width: 7rem; height: 7rem; border-radius: 50%; }
-.home-header h1 { margin: 0.2rem 0; font-size: 2rem; }
-.home-header .title { margin: 0 0 0.4rem; color: var(--accent); font-weight: 600; }
-.home-header .tagline { margin: 0 0 0.6rem; font-size: 1.1rem; opacity: 0.85; }
-.home-header .now-callout {
-  margin: 0 0 0.8rem; font-size: 0.95rem; padding: 0.35rem 0.7rem;
-  border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent);
-  border-radius: 0 4px 4px 0; display: inline-block;
+.home-portrait .portrait {
+  display: block; width: 9rem; height: 9rem; border-radius: 50%; object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, 0.92); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
-.home-header .id-strip { display: flex; gap: 0.6rem; align-items: center; margin-bottom: 0.5rem; }
-.home-header .id-strip .id-link { color: inherit; display: inline-flex; }
-.home-header .id-strip .id-link:hover { color: var(--accent); }
-.home-header .contact { font-style: normal; font-size: 0.85rem; opacity: 0.7; }
+.home-header h1 { margin: 0 0 0.3rem; font-size: 2.6rem; letter-spacing: -0.02em; color: #fff; }
+.home-header h1::after { display: none; }
+.home-header .title {
+  margin: 0 0 0.7rem; font-family: var(--font-body); font-weight: 500;
+  font-size: 0.95rem; letter-spacing: 0.04em; color: rgba(255, 255, 255, 0.88);
+}
+.home-header .tagline { margin: 0 0 0.9rem; font-size: 1.15rem; color: rgba(255, 255, 255, 0.95); }
+.home-header .now-callout {
+  margin: 0 0 1rem; font-size: 0.95rem; padding: 0.35rem 0.85rem;
+  background: rgba(255, 255, 255, 0.16); color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 999px; display: inline-block;
+}
+.home-header .id-strip { display: flex; gap: 0.7rem; align-items: center; margin-bottom: 0.6rem; }
+.home-header .id-link { color: #fff; display: inline-flex; opacity: 0.9; }
+.home-header .id-link:hover { color: #fff; opacity: 1; }
+.home-header .contact { font-style: normal; font-size: 0.85rem; color: rgba(255, 255, 255, 0.8); }
 .home-header .contact a { color: inherit; }
-p.lead { margin-top: 1.5rem; }
+
+/* Timeline (experience / education / teaching) — entries as cards with a blue
+ * left rail (the timeline accent), hairline border, subtle hover lift. */
+section.timeline { display: flex; flex-direction: column; gap: 1.25rem; }
+article.entry {
+  background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--blue);
+  border-radius: 10px; padding: 1.25rem 1.5rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+article.entry:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.entry-head h2 { margin: 0 0 0.25rem; font-size: 1.3rem; }
+.entry-head .org { font-weight: 600; color: var(--ink); }
+.entry-head .loc { color: var(--ink-soft); }
+.entry-head .period { display: block; font-size: 0.82rem; color: var(--link); margin-top: 0.2rem; font-weight: 500; letter-spacing: 0.02em; }
+.entry-body { margin-top: 0.5rem; }
+.entry-body p { margin: 0.5rem 0; }
+.entry-body ul { margin: 0.5rem 0 0; padding-left: 1.3rem; }
+.entry-body li { margin: 0.25rem 0; }
+
+/* Cards (portfolio / blog / archive) — same shape, no left rail. */
+section.cards { display: flex; flex-direction: column; gap: 1.25rem; }
+article.card {
+  background: var(--card); border: 1px solid var(--rule); border-radius: 10px;
+  padding: 1.25rem 1.5rem; transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+article.card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+article.card .entry-head h2 { margin: 0 0 0.15rem; font-size: 1.3rem; }
+article.card .entry-head .period { display: block; font-size: 0.82rem; color: var(--link); margin-top: 0.1rem; }
+article.card .meta { margin: 0 0 0.4rem; font-size: 0.9rem; color: var(--ink-soft); }
+article.card .meta .org { font-weight: 600; color: var(--ink); }
+article.card .meta .loc { color: var(--ink-soft); }
+
+/* Prose blocks (home intro, skills, publications). */
+.prose { font-size: 1rem; line-height: 1.7; }
+.prose p { margin: 0.7rem 0; }
+.prose ul { margin: 0.7rem 0; padding-left: 1.3rem; }
+.prose li { margin: 0.3rem 0; }
+.prose strong { font-weight: 600; }
+
+/* In-prose section headings. build.rs maps `#`→<h2> and `##`→<h3>; publications
+ * uses `##`, so its Journals/Conferences/… groups are <h3>. h2 gets the short
+ * blue accent rule (matching page titles); h3 is a tinted block with a blue
+ * left rail so the publication groups read as distinct scannable sections. */
+.prose h2 { font-size: 1.35rem; margin: 2rem 0 0.7rem; }
+.prose h2::after { content: ""; display: block; width: 2.5rem; height: 2px; background: var(--blue); margin-top: 0.4rem; border-radius: 1px; }
+.prose h3 {
+  font-size: 1.1rem; margin: 1.6rem 0 0.6rem; padding: 0.4rem 0.8rem;
+  border-left: 3px solid var(--blue);
+  background: color-mix(in srgb, var(--blue) 7%, transparent);
+  border-radius: 0 6px 6px 0;
+}
+.prose h3:first-child { margin-top: 0; }
+
+.pub-note { font-size: 0.85rem; color: var(--ink-soft); font-style: italic; margin: 0 0 1.5rem; }
+
+/* FR-draft notice — discreet, on-palette. */
+.fr-draft-notice {
+  font-size: 0.82rem; color: var(--ink-soft);
+  border: 1px dashed var(--rule); background: color-mix(in srgb, var(--blue) 5%, transparent);
+  padding: 0.5rem 0.8rem; border-radius: 6px; margin: 0 0 1.5rem;
+}
+
+/* Screen-reader-only (FrDraftNotice renders an empty one when not draft). */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* General links. */
+a { color: var(--link); }
+a:hover { color: var(--blue); }
 
 /* Visible keyboard focus on all interactive elements. */
 a:focus-visible, button:focus-visible, .id-link:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 3px;
+  outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 3px;
 }
 
-/* Timeline (experience / education) */
-section.timeline { display: flex; flex-direction: column; gap: 1.75rem; }
-article.entry { border-left: 2px solid var(--accent); padding-left: 1rem; }
-.entry-head h2 { margin: 0 0 0.2rem; font-size: 1.15rem; }
-.entry-head .org { font-weight: 600; }
-.entry-head .loc { opacity: 0.75; }
-.entry-head .period { display: block; font-size: 0.85rem; color: var(--accent); margin-top: 0.15rem; }
-.entry-body ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
-.entry-body li { margin: 0.2rem 0; }
-
-/* Cards (portfolio / blog / archive) — same entry shape, no timeline rail */
-section.cards { display: flex; flex-direction: column; gap: 1.75rem; }
-article.card { padding-left: 0; border-left: none; }
-article.card .entry-head h2 { margin: 0 0 0.1rem; font-size: 1.15rem; }
-article.card .entry-head .period { display: block; font-size: 0.85rem; color: var(--accent); margin-top: 0.1rem; }
-article.card .meta { margin: 0 0 0.3rem; font-size: 0.9rem; }
-article.card .meta .org { font-weight: 600; }
-article.card .meta .loc { opacity: 0.75; }
-
-/* Skills / Publications prose blocks */
-.prose h2 { font-size: 1.1rem; margin: 1.4rem 0 0.3rem; border-bottom: 1px solid #8884; padding-bottom: 0.2rem; }
-.prose h3 { font-size: 1rem; margin: 1rem 0 0.2rem; }
-.prose p { margin: 0.3rem 0; }
-.pub-note { font-size: 0.85rem; opacity: 0.7; font-style: italic; }
-
-/* FR-draft notice */
-.fr-draft-notice {
-  font-size: 0.8rem; opacity: 0.8; border: 1px dashed #8886;
-  padding: 0.4rem 0.7rem; border-radius: 4px; margin: 0.5rem 0 1.25rem;
+/* Mobile: tighten the hero and stack the portrait above the text. */
+@media (max-width: 640px) {
+  .home-header { padding: 1.5rem 1.25rem; gap: 1.25rem; }
+  .home-header .home-portrait { order: -1; }
+  .home-header h1 { font-size: 2rem; }
+  h1 { font-size: 1.9rem; }
 }
