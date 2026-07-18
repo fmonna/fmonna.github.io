@@ -10,7 +10,6 @@
 # titles and venues VERBATIM (they are proper nouns / published titles) and only
 # translates the section headings — so the FR list is identical in substance to
 # EN. fr_draft: true flags it for review all the same.
-fr_draft: true
 en: |
   ## Journals
 
@@ -60,7 +59,7 @@ fr: |
   - MAPSP 2013, Kedad-Sidhoum S., **Monna F.**, Mounie G., Trystram D., "Scheduling on Multi-Cores with GPU", Pont-à-Mousson, France.
   - ECCO 2013, Blazewicz J., Kedad-Sidhoum S., **Monna F.**, Mounié G., Trystram D., "Preemptive Scheduling with GPU", Paris, France.
 
-  ## Manuels de mathématiques
+  ## Annales de concours en mathématiques
 
   - Annales corrigées des problèmes posés aux Concours PC (Math 1), "Annales corrigées des problèmes posés aux Concours PC, Mathématiques et Informatique", pour les années 2012 à 2015, éditions H&K.
   - Annales corrigées de l'épreuve de Math 1 E3A PSI 2007, "L'intégrale des Concours E3A+CCP PSI Tome 1, Mathématiques, Physique, Chimie", éditions H&K.

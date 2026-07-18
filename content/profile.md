@@ -10,18 +10,16 @@ title:
   fr: Docteur
 # One-line identity shown as the hero subtitle. Falls back to `title` when empty.
 tagline:
-  en: HPC architect turning research into production systems.
-  fr: Architecte HPC, de la recherche aux systèmes en production.
+  en: AI & HPC architect turning research into production systems.
+  fr: Architecte IA & HPC, de la recherche aux systèmes en production.
 email: florence.monna@gmail.com
-linkedin: florencemonna          # https://linkedin.com/in/florencemonna
-github: fmonna                   # https://github.com/fmonna
-# Academic IDs — leave empty until set; an empty value hides the icon.
-scholar: ""                      # e.g. https://scholar.google.com/citations?user=XXXX
+linkedin: florencemonna 
+github: fmonna         
+scholar: https://scholar.google.com/citations?hl=fr&user=ApNArzoAAAAJ 
 orcid: ""                        # e.g. 0000-0000-0000-0000
-# "Currently …" one-liner shown as a callout under the hero. Hides when empty.
 now:
-  en: Currently HPC architect at EDF R&D.
-  fr: Actuellement architecte HPC chez EDF R&D.
+  en: Currently AI Factory Engineer at Outscale 
+  fr: Actuellement Ingénieur AI Factory chez Outscale
 location:
   en: Maisons-Laffitte, France
   fr: Maisons-Laffitte, France
@@ -33,5 +31,4 @@ fr: |
   Architect HPC, ingénieur recherche, chef de projet technique. Docteur en Recherche Opérationelle, diplôme d'ingénieur en optimisation de l'ENSTA ParisTech? Ma carière couvre de la recherche en ordonnancement CPU-GPU, la tolérance aux pannes et des logiciels de gestion de ressource à grande échelle, la gestion de programmes techniques en Data, DevOps et ingénierie logicielle, ainsi que l'architecture de machines HPC et solutions de stockage. J'ai toujours aimé résoudre des problèmes, et transforme des travaux de recherche en livrables de production.
 
   Naviguez dans les différentes sections pour voir mon expérience professionnelle, éducation, compétences et publications.
-fr_draft: true
 ---
