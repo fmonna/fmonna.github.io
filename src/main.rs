@@ -26,7 +26,7 @@ use dioxus::prelude::*;
 mod content;
 use content::{
     ARCHIVE, BLOG, EDUCATION, Entry, EXPERIENCE, Lang, PORTFOLIO, PROFILE, PROFILE_INTRO,
-    PROFILE_INTRO_DRAFT, PUBLICATIONS, PUBLICATIONS_DRAFT, SKILLS, SKILLS_DRAFT, TALKS, TEACHING,
+    PROFILE_INTRO_DRAFT, PUBLICATIONS, SKILLS, TALKS, TEACHING,
 };
 
 // Assets are registered with the `asset!()` macro (the 0.7 convention) and
@@ -381,7 +381,9 @@ fn EntryCard(entry: Entry, lang: Lang) -> Element {
         article { class: "card",
             div { class: "entry-head",
                 h2 { { entry.heading.pick(lang) } }
-                span { class: "period", { format_period(entry.start, entry.end, lang) } }
+                if !entry.start.is_empty() {
+                    span { class: "period", { format_period(entry.start, entry.end, lang) } }
+                }
             }
             if !org.is_empty() || !loc.is_empty() {
                 p { class: "meta",
@@ -400,8 +402,12 @@ fn Skills() -> Element {
     let lang = *LANG.read();
     rsx! {
         h1 { { match lang { Lang::En => "Skills", Lang::Fr => "Compétences" } } }
-        FrDraftNotice { lang, draft: SKILLS_DRAFT }
-        div { class: "prose", dangerous_inner_html: SKILLS.pick(lang) }
+        FrDraftNotice { lang, draft: SKILLS.iter().any(|e| e.fr_draft) }
+        section { class: "cards",
+            for e in SKILLS.iter() {
+                EntryCard { entry: *e, lang }
+            }
+        }
     }
 }
 
@@ -410,14 +416,18 @@ fn Publications() -> Element {
     let lang = *LANG.read();
     rsx! {
         h1 { { match lang { Lang::En => "Publications", Lang::Fr => "Publications" } } }
-        FrDraftNotice { lang, draft: PUBLICATIONS_DRAFT }
+        FrDraftNotice { lang, draft: PUBLICATIONS.iter().any(|e| e.fr_draft) }
         p { class: "pub-note",
             { match lang {
                 Lang::En => "Primary author in bold.",
                 Lang::Fr => "Premier auteur en gras.",
             } }
         }
-        div { class: "prose", dangerous_inner_html: PUBLICATIONS.pick(lang) }
+        section { class: "cards",
+            for e in PUBLICATIONS.iter() {
+                EntryCard { entry: *e, lang }
+            }
+        }
     }
 }
 
@@ -442,9 +452,8 @@ fn Cv() -> Element {
 }
 
 /// Discreet notice shown on FR pages while that page's French translation is a
-/// draft. `draft` is per-page: the experience/education pages pass whether any
-/// of their entries carry `fr_draft`; the skills/publications pages pass their
-/// own `*_DRAFT` flag.
+/// draft. `draft` is per-page: every collection page passes whether any of its
+/// entries carry `fr_draft`.
 #[component]
 fn FrDraftNotice(lang: Lang, draft: bool) -> Element {
     if lang == Lang::Fr && draft {

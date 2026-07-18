@@ -30,8 +30,12 @@ fn main() {
     });
 
     let profile = parse_file(&content_dir.join("profile.md"));
-    let skills = parse_file(&content_dir.join("skills.md"));
-    let publications = parse_file(&content_dir.join("publications.md"));
+    // Skills and publications used to be single prose files (one `## ` section
+    // per category); they're now per-section folders like the other collections.
+    // They carry no `period:`, so they sort by `order:` ascending instead of by
+    // date — see `load_ordered_entries`.
+    let skills = load_ordered_entries(&content_dir, "skills");
+    let publications = load_ordered_entries(&content_dir, "publications");
 
     // Each collection is a directory of one-entry-per-file Markdown. They all
     // load the same way; `load_entries` also sorts newest-first by period.end
@@ -49,7 +53,7 @@ fn main() {
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let out_path = PathBuf::from(&out_dir).join("content_gen.rs");
     println!(
-        "cargo:warning=content_gen: {} experience, {} education, {} teaching, {} talks, {} blog, {} portfolio, {} archive",
+        "cargo:warning=content_gen: {} experience, {} education, {} teaching, {} talks, {} blog, {} portfolio, {} archive, {} skills, {} publications",
         experience.len(),
         education.len(),
         teaching.len(),
@@ -57,6 +61,8 @@ fn main() {
         blog.len(),
         portfolio.len(),
         archive.len(),
+        skills.len(),
+        publications.len(),
     );
     fs::write(&out_path, render_module(&Module {
         profile,
@@ -94,6 +100,24 @@ fn load_entries(content_dir: &Path, subdir: &str) -> Vec<Entry> {
         eb.cmp(&ea)
             .then_with(|| period_start_key(&a.front).cmp(&period_start_key(&b.front)))
     });
+    entries
+}
+
+/// Load and order-sort one collection directory (e.g. "skills"). Like
+/// `load_entries` but for collections without a `period:` — sections are
+/// ordered by the `order:` frontmatter field (ascending) so the narrative
+/// sequence (Languages, Research, …) survives regardless of filename. Ties
+/// fall back to filesystem order for stability.
+fn load_ordered_entries(content_dir: &Path, subdir: &str) -> Vec<Entry> {
+    let mut entries: Vec<Entry> = content_dir
+        .join(subdir)
+        .read_dir()
+        .unwrap_or_else(|e| panic!("read content/{} dir: {}", subdir, e))
+        .flatten()
+        .filter(|e| e.path().extension().is_some_and(|x| x == "md"))
+        .filter_map(|e| parse_entry(&e.path()))
+        .collect();
+    entries.sort_by(|a, b| a.order.cmp(&b.order));
     entries
 }
 
@@ -148,8 +172,8 @@ fn period_sort_key(v: &Yaml, present_is_newest: bool) -> (i64, i64) {
 
 struct Module {
     profile: Yaml,
-    skills: Yaml,
-    publications: Yaml,
+    skills: Vec<Entry>,
+    publications: Vec<Entry>,
     experience: Vec<Entry>,
     education: Vec<Entry>,
     teaching: Vec<Entry>,
@@ -160,8 +184,8 @@ struct Module {
 }
 
 /// Extract the (en, fr, fr_draft) triple from a bilingual prose file
-/// (skills.md / publications.md), where `en`/`fr` are `|` block scalars and
-/// `fr_draft` is a bool. Returns empty strings / false when absent.
+/// (profile.md — the home-page intro), where `en`/`fr` are `|` block scalars
+/// and `fr_draft` is a bool. Returns empty strings / false when absent.
 fn prose_yaml(y: &Yaml) -> (String, String, bool) {
     let en = y.get("en").and_then(|v| v.as_str()).unwrap_or("").to_string();
     let fr = y.get("fr").and_then(|v| v.as_str()).unwrap_or("").to_string();
@@ -185,8 +209,9 @@ fn render_module(m: &Module) -> String {
     emit_profile(&mut s, &m.profile);
     s.push_str("];\n\n");
 
-    // Home-page intro prose: a bilingual LStr reusing the same prose path as
-    // SKILLS/PUBLICATIONS (top-level `en`/`fr` block scalars in profile.md).
+    // Home-page intro prose: a bilingual LStr built from profile.md's top-level
+    // `en`/`fr` block scalars (the only remaining prose-style content file —
+    // skills and publications moved to per-section Entry collections below).
     s.push_str("pub static PROFILE_INTRO: LStr = ");
     emit_prose(&mut s, &m.profile);
     s.push_str(";\n");
@@ -194,19 +219,10 @@ fn render_module(m: &Module) -> String {
     s.push_str(if prose_yaml(&m.profile).2 { "true" } else { "false" });
     s.push_str(";\n\n");
 
-    s.push_str("pub static SKILLS: LStr = ");
-    emit_prose(&mut s, &m.skills);
-    s.push_str(";\n");
-    s.push_str("pub static SKILLS_DRAFT: bool = ");
-    s.push_str(if prose_yaml(&m.skills).2 { "true" } else { "false" });
-    s.push_str(";\n\n");
-
-    s.push_str("pub static PUBLICATIONS: LStr = ");
-    emit_prose(&mut s, &m.publications);
-    s.push_str(";\n");
-    s.push_str("pub static PUBLICATIONS_DRAFT: bool = ");
-    s.push_str(if prose_yaml(&m.publications).2 { "true" } else { "false" });
-    s.push_str(";\n\n");
+    // Skills & publications are now per-section Entry collections (one card per
+    // `## ` category), emitted through the same path as the other collections.
+    emit_collection(&mut s, "SKILLS", &m.skills);
+    emit_collection(&mut s, "PUBLICATIONS", &m.publications);
 
     s.push_str("pub static EXPERIENCE: &[Entry] = &[\n");
     for e in &m.experience {
@@ -283,7 +299,7 @@ fn push_kv_loc(s: &mut String, k: &str, en: &str, fr: &str) {
     s.push_str("),\n");
 }
 
-/// Emit a bilingual prose block (skills/publications) as `LStr { en, fr }`,
+/// Emit a bilingual prose block (the profile intro) as `LStr { en, fr }`,
 /// converting each Markdown body to HTML. FR falls back to EN when empty.
 fn emit_prose(s: &mut String, y: &Yaml) {
     let (en, fr, _) = prose_yaml(y);
@@ -306,9 +322,15 @@ fn emit_entry(s: &mut String, e: &Entry) {
     // so a blog post's heading is the post title rather than empty.
     let title_en = e.front.get("title").and_then(|r| r.get("en")).and_then(|v| v.as_str());
     let title_fr = e.front.get("title").and_then(|r| r.get("fr")).and_then(|v| v.as_str());
-    let head_en = degree_en.or(title_en).unwrap_or(role_en);
-    let head_fr = degree_fr
+    // Skills/publications sections carry `heading` (the `## ` category title).
+    // Prefer it, then degree, then title, then role — whichever the entry kind
+    // actually populates.
+    let heading_en = e.front.get("heading").and_then(|r| r.get("en")).and_then(|v| v.as_str());
+    let heading_fr = e.front.get("heading").and_then(|r| r.get("fr")).and_then(|v| v.as_str());
+    let head_en = heading_en.or(degree_en).or(title_en).unwrap_or(role_en);
+    let head_fr = heading_fr
         .filter(|x| !x.is_empty())
+        .or_else(|| degree_fr.filter(|x| !x.is_empty()))
         .or_else(|| title_fr.filter(|x| !x.is_empty()))
         .unwrap_or(degree_en.or(title_en).unwrap_or(role_fr));
 

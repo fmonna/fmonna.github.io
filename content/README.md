@@ -61,18 +61,48 @@ heading; `period.start` is the publish date (`period.end` left `null` = ongoing)
 The post body is `summary.en.long` / `fr.long`, rendered as Markdown. A
 placeholder lives at `blog/welcome.md`.
 
+### Skills (`skills/*.md`), Publications (`publications/*.md`)
+
+One file per section — each former `## ` heading in the old single-file form is
+now its own entry. These collections have no timeline, so they carry no
+`period:`; instead `order:` (ascending) sets the narrative sequence. The
+section's heading and body come from frontmatter:
+
+```yaml
+---
+id: journals                  # stable slug
+order: 1                      # ascending: 1 = first section shown
+heading:
+  en: Journals
+  fr: Revues
+summary:
+  en.long: |                  # section body: bullet list OR paragraph
+    - First item
+    - Second item
+  fr.long: |                  # FR falls back to EN when empty
+    - Premier élément
+    - Deuxième élément
+---
+```
+
+On the site each section renders as a card (`EntryCard`, like portfolio/blog).
+In the PDF CVs each section renders as a heading + body prose block (the
+template's `prose()`), the same shape `group_prose` produced from the old
+single-file `## ` bodies. Publications keep the primary author in
+**bold** as Markdown `**Monna F.**`; the Books section is a paragraph, not a
+list — both are handled by the Markdown converter.
+
 ## Ordering
 
 All collection timelines (experience, education, teaching, talks, portfolio,
-blog, archive) list **newest-first by `period.end`**, not by the `order:` field.
-`period.end: null` / absent means "present" and sorts first. This matches the
-CV/LaTeX order, so adding a new job or talk needs no renumbering — `order:` is
-read into each entry but is no longer used for sorting.
+blog, archive) list **newest-first by `period.end`**, not by the `order:`
+field. `period.end: null` / absent means "present" and sorts first. This matches
+the CV/LaTeX order, so adding a new job or talk needs no renumbering — `order:`
+is read into each entry but is no longer used for sorting.
 
-### Publications (`publications.md`)
-
-One file, one section per category (Journals / Conferences / Guidebooks / Books / MOOC),
-primary author **bold** preserved as Markdown `**Monna F.**`.
+Skills and publications are the exception: they have no `period:`, so they sort
+**ascending by `order:`** (Languages / Journals first). Set `order:` on each
+section file to control its position.
 
 ## Source & reconciliation
 

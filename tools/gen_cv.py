@@ -121,6 +121,17 @@ def load_entries(subdir: str) -> list[dict]:
     return entries
 
 
+def load_ordered_entries(subdir: str) -> list[dict]:
+    """Load every *.md in content/<subdir>/, sorted ascending by the `order:`
+    frontmatter field. For collections without a `period:` (skills, publications),
+    `order:` carries the narrative sequence (Languages, Research, …) so it survives
+    regardless of filename. Mirrors build.rs load_ordered_entries."""
+    d = CONTENT_DIR / subdir
+    entries = [load_yaml(p) for p in sorted(d.glob("*.md"))]
+    entries.sort(key=lambda e: e.get("order") if e.get("order") is not None else 0)
+    return entries
+
+
 # --- text formatting (mirrors build.rs + main.rs) ---------------------------
 
 def fmt_period(start, end, lang: str) -> str:
@@ -284,12 +295,13 @@ def emit_array(items: list[str], indent: str) -> str:
 
 
 def group_prose(md: str, lang: str) -> list[tuple[str, object]]:
-    """Parse a skills/publications Markdown body into pre-grouped blocks the
-    template's `prose()` renders with a pure `for` (no mutation): runs of `- `
-    bullets collapse into one ('list', [blocks]) entry; `#`/`##` headings become
-    ('head', block); other lines become ('para', block). Mirrors build.rs
-    md_to_html's block structure (heading levels collapse to one head kind here
-    since the template sizes all heads identically)."""
+    """Parse a section's Markdown body (a skills/publications `summary.*.long`)
+    into pre-grouped blocks the template's `prose()` renders with a pure `for`
+    (no mutation): runs of `- ` bullets collapse into one ('list', [blocks])
+    entry; `#`/`##` headings become ('head', block); other lines become
+    ('para', block). Mirrors build.rs md_to_html's block structure (heading
+    levels collapse to one head kind here since the template sizes all heads
+    identically)."""
     blocks: list[tuple[str, object]] = []
     pending: list[str] = []
 
@@ -327,6 +339,24 @@ def emit_prose_blocks(blocks: list[tuple[str, object]], indent: str) -> str:
             body_lit = body  # already a content-block literal
         lines.append(f"{indent}  (kind: {str_literal(kind)}, body: {body_lit}),")
     return f"(\n{chr(10).join(lines)}\n{indent})"
+
+
+def section_blocks(entry: dict, lang: str) -> list[tuple[str, object]]:
+    """One skills/publications section (one file) -> a head block carrying the
+    section heading, followed by the body's prose blocks (bullet list or
+    paragraph). This is what group_prose used to produce from a `## heading`
+    line plus body in the old single-file form; now the heading lives in
+    frontmatter and the body in `summary.<lang>.long` (FR falls back to EN)."""
+    blocks: list[tuple[str, object]] = []
+    heading = lstr(entry.get("heading"), lang)
+    if heading:
+        blocks.append(("head", content_block(f"**{heading}**")))
+    summary = entry.get("summary") or {}
+    en = (summary.get("en.long") or "").strip()
+    fr = (summary.get("fr.long") or "").strip()
+    body = fr if (lang == "fr" and fr) else en
+    blocks.extend(group_prose(body, lang))
+    return blocks
 
 
 # --- CV assembly ------------------------------------------------------------
@@ -390,8 +420,8 @@ def build_education(entries: list[dict], lang: str):
     return out
 
 
-def build_cv(lang: str, profile: dict, skills: dict,
-             publications: dict, experience: list[dict],
+def build_cv(lang: str, profile: dict, skills: list[dict],
+             publications: list[dict], experience: list[dict],
              education: list[dict]) -> str:
     name = (profile.get("name") or "").strip()
     title = lstr(profile.get("title"), lang)
@@ -404,10 +434,8 @@ def build_cv(lang: str, profile: dict, skills: dict,
     exp = build_experience(experience, lang)
     edu = build_education(education, lang)
 
-    skills_md = (skills.get(lang) or skills.get("en") or "").strip()
-    skills_blocks = group_prose(skills_md, lang)
-    pubs_md = (publications.get(lang) or publications.get("en") or "").strip()
-    pubs_blocks = group_prose(pubs_md, lang)
+    skills_blocks = [b for e in skills for b in section_blocks(e, lang)]
+    pubs_blocks = [b for e in publications for b in section_blocks(e, lang)]
 
     s = STRINGS[lang]
     lines = []
@@ -467,8 +495,8 @@ def main() -> int:
         return 1
 
     profile = load_yaml(CONTENT_DIR / "profile.md")
-    skills = load_yaml(CONTENT_DIR / "skills.md")
-    publications = load_yaml(CONTENT_DIR / "publications.md")
+    skills = load_ordered_entries("skills")
+    publications = load_ordered_entries("publications")
     experience = load_entries("experience")
     education = load_entries("education")
 
