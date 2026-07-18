@@ -127,30 +127,121 @@ enum Route {
 #[component]
 fn Home() -> Element {
     let lang = *LANG.read();
-    let (name, _): (&str, ()) = (profile_str("name"), ());
+    let name = profile_str("name");
     let title = profile_loc("title").pick(lang);
+    let tagline = profile_loc("tagline").pick(lang);
+    let now = profile_loc("now").pick(lang);
     let location = profile_loc("location").pick(lang);
     let email = profile_str("email");
     let linkedin = profile_str("linkedin");
-    let phone = profile_str("phone");
+    let github = profile_str("github");
+    let scholar = profile_str("scholar");
+    let orcid = profile_str("orcid");
+    // Monogram initials for the placeholder portrait (a real photo replaces this
+    // SVG later). Decorative — no role/aria-label, the name <h1> is the label.
+    let initials: String = name
+        .split_whitespace()
+        .filter_map(|w| w.chars().next())
+        .take(2)
+        .collect();
 
     rsx! {
         header { class: "home-header",
-            h1 { "{name}" }
-            p { class: "title", "{title}" }
-            address { class: "contact",
-                a { href: "mailto:{email}", "{email}" }
-                span { " · " }
-                a { href: "https://linkedin.com/in/{linkedin}", "LinkedIn" }
-                span { " · " }
-                a { href: "tel:{phone}", "{phone}" }
-                span { " · " }
-                "{location}"
+            div { class: "home-text",
+                h1 { "{name}" }
+                p { class: "title", "{title}" }
+                if !tagline.is_empty() {
+                    p { class: "tagline", "{tagline}" }
+                }
+                if !now.is_empty() {
+                    p { class: "now-callout", "{now}" }
+                }
+                nav { class: "id-strip",
+                    if !email.is_empty() {
+                        a { href: "mailto:{email}", title: email, class: "id-link",
+                            IconEmail {}
+                        }
+                    }
+                    if !linkedin.is_empty() {
+                        a { href: "https://linkedin.com/in/{linkedin}", title: "LinkedIn", class: "id-link",
+                            IconLinkedIn {}
+                        }
+                    }
+                    if !github.is_empty() {
+                        a { href: "https://github.com/{github}", title: "GitHub", class: "id-link",
+                            IconGitHub {}
+                        }
+                    }
+                    if !scholar.is_empty() {
+                        a { href: "{scholar}", title: "Google Scholar", class: "id-link",
+                            IconScholar {}
+                        }
+                    }
+                    if !orcid.is_empty() {
+                        a { href: "https://orcid.org/{orcid}", title: "ORCID", class: "id-link",
+                            IconOrcid {}
+                        }
+                    }
+                }
+                address { class: "contact",
+                    if !location.is_empty() { "{location}" }
+                }
+            }
+            div { class: "home-portrait",
+                svg {
+                    class: "portrait-svg",
+                    view_box: "0 0 100 100",
+                    circle { cx: "50", cy: "50", r: "49", fill: "none", stroke: "var(--accent)", stroke_width: "2" }
+                    text {
+                        x: "50", y: "50",
+                        text_anchor: "middle",
+                        dominant_baseline: "central",
+                        fill: "var(--accent)",
+                        font_size: "40",
+                        font_family: "system-ui, sans-serif",
+                        font_weight: "600",
+                        "{initials}"
+                    }
+                }
             }
         }
         FrDraftNotice { lang, draft: PROFILE_INTRO_DRAFT }
         div { class: "prose", dangerous_inner_html: PROFILE_INTRO.pick(lang) }
     }
+}
+
+// Inline academic-network icons (24x24, currentColor). No icon-font or image
+// dependency — matches the dependency-free constraint.
+#[component]
+fn IconEmail() -> Element {
+    rsx! { svg { view_box: "0 0 24 24", width: "20", height: "20", fill: "none", stroke: "currentColor", stroke_width: "2",
+        rect { x: "3", y: "5", width: "18", height: "14", rx: "2" }
+        path { d: "M3 7l9 6 9-6" }
+    } }
+}
+#[component]
+fn IconLinkedIn() -> Element {
+    rsx! { svg { view_box: "0 0 24 24", width: "20", height: "20", fill: "currentColor",
+        path { d: "M4.98 3.5A2.5 2.5 0 1 1 0 3.5a2.5 2.5 0 0 1 4.98 0zM0 8h5v16H0zM7 8h4.8v2.2h.07c.67-1.2 2.3-2.5 4.73-2.5 5 0 6 3.3 6 7.6V24h-5v-7.4c0-1.8 0-4-2.5-4s-2.9 1.9-2.9 3.9V24H7z" }
+    } }
+}
+#[component]
+fn IconGitHub() -> Element {
+    rsx! { svg { view_box: "0 0 24 24", width: "20", height: "20", fill: "currentColor",
+        path { d: "M12 0a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.4-1.3-5.4-5.7 0-1.3.4-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.5 18.3 4.8 18.3 4.8c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.8 5.4-5.4 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 0z" }
+    } }
+}
+#[component]
+fn IconScholar() -> Element {
+    rsx! { svg { view_box: "0 0 24 24", width: "20", height: "20", fill: "currentColor",
+        path { d: "M12 24a12 12 0 1 1 0-24 12 12 0 0 1 0 24zm.5-19c-3 0-5 2-5 4.7 0 2.5 1.8 4.3 4.4 4.3 1.4 0 2.6-.5 3.4-1.3-.3 1.7-1.7 2.9-3.6 3.2-1 .2-2 .1-2.8-.2l-.5 1.6c1 .4 2.1.5 3.2.4 3.8-.4 6.4-3.3 6.4-7.4C18 6.5 15.7 5 12.5 5zm0 2.2c1.4 0 2.3 1 2.3 2.4s-.9 2.4-2.3 2.4-2.3-1-2.3-2.4.9-2.4 2.3-2.4z" }
+    } }
+}
+#[component]
+fn IconOrcid() -> Element {
+    rsx! { svg { view_box: "0 0 24 24", width: "20", height: "20", fill: "currentColor",
+        path { d: "M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zM7.5 5h1.4v10.5H7.5zM8.2 3.3a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8zm3.2 1.7v10.5h1.4v-2.6c0-.4 0-.7.1-1 .3-.7 1-1.4 1.9-1.4 1.1 0 1.6.8 1.6 2v3h1.4v-3.2c0-2.3-1.2-3.4-2.8-3.4-1.3 0-2 .7-2.3 1.2V5z" }
+    } }
 }
 
 #[component]
@@ -330,9 +421,15 @@ fn Cv() -> Element {
         h1 { "CV" }
         p {
             { match lang {
-                Lang::En => "Downloadable CVs — a full English CV and a two-page French CV — will be generated from the same Markdown source via Typst.",
-                Lang::Fr => "Les CV téléchargeables — un CV complet en anglais et un CV de deux pages en français — seront générés depuis la même source Markdown via Typst.",
+                Lang::En => "Downloadable CVs — a full English CV and a two-page French CV — generated from the same Markdown source as the site, rendered with Typst.",
+                Lang::Fr => "CV téléchargeables — un CV complet en anglais et un CV condensé en deux pages en français — générés depuis la même source Markdown que le site, mis en page avec Typst.",
             } }
+        }
+        p {
+            a { href: "/cv-en.pdf", "CV (English, full) [PDF]" }
+        }
+        p {
+            a { href: "/cv-fr.pdf", "CV (français, 2 pages) [PDF]" }
         }
     }
 }

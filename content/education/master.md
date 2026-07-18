@@ -3,7 +3,7 @@ id: master
 order: 2
 degree:
   en: Master of Science in Engineering (MSE)
-  fr: Master 2 spécialisé en ingénierie (MSE)  
+  fr: Diplôme d'ingénieur (MSE)  
 venue: ENSTA ParisTech
 location:
   en: Paris, France
@@ -13,6 +13,6 @@ period:
   end: 2011
 specialization:
   en: Optimization, Command & Operations Research
-  fr: Optimisation, commande et recherche opérationnelle  
+  fr: Optimisation, Commande et Recherche Opérationnelle  
 summary:
 ---

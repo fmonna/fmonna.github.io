@@ -16,9 +16,7 @@ summary:
   en.long: |
     - Analyzed topological properties of electrical networks, especially regarding blackouts.
     - Developed a multimodal particle swarm algorithm for network optimization.
-  fr.short: | 
-    - Analyse des propriétés topologiques des réseaux électriques, en particulier concernant les blackouts.
-    - Développement d'un algorithme multimodal d'essaim de particules pour l'optimisation de réseaux.
+  fr.short: Développement d'un algorithme multimodal d'essaim de particules pour l'optimisation de réseaux.
   fr.long: |
     - Analyse des propriétés topologiques des réseaux électriques, en particulier concernant les blackouts.
     - Développement d'un algorithme multimodal d'essaim de particules pour l'optimisation de réseaux.

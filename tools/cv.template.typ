@@ -36,7 +36,7 @@
   set page(
     paper: "a4",
     margin: margin,
-    numbering: if is-fr { (..) => align(right)[#counter(page).display("1")] } else { none },
+    numbering: none,
   )
   set text(font: "New Computer Modern", size: if is-fr { 9.5pt } else { 10pt }, lang: cv.lang)
   set par(leading: 0.62em, justify: true)
@@ -53,36 +53,42 @@
       #h(1.2em) • #h(1.2em)
       #link("https://linkedin.com/in/" + cv.contact.linkedin)[linkedin.com/in/#cv.contact.linkedin]
       #h(1.2em) • #h(1.2em)
-      #cv.contact.phone
-      #h(1.2em) • #h(1.2em)
       #cv.contact.location
     ]
   ]
-  v(0.2em)
+  v(0.4em)
 
   // --- section heading: small-caps title with a thin rule beneath.
   let section(title) = {
-    v(0.6em)
+    v(1em)
     block(width: 100%, spacing: 0pt)[
       #text(size: if is-fr { 11pt } else { 12pt }, weight: "bold", tracking: 0.3pt)[#upper(title)]
-      #v(-0.5em)
+      #v(-0.7em)
       #line(length: 100%, stroke: 0.6pt + luma(170))
     ]
-    v(0.1em)
+    v(-0.1em)
   }
 
   // --- entry: role (bold) on the left, period right-aligned; org — location below.
   let entry(heading, org, location, period, bullets) = {
     block(width: 100%, spacing: 0pt)[
+      #v(0.7em)
       #grid(
         columns: (1fr, auto),
         column-gutter: 1em,
         text(weight: "bold")[#heading],
         text(size: if is-fr { 8.5pt } else { 9pt }, fill: luma(90))[#period],
       )
+      #v(-0.7em)
       #text(size: if is-fr { 9pt } else { 9.5pt }, fill: luma(70))[#org — #location]
     ]
+    // Explicit gap before the bullets: the header `block` carries `spacing: 0pt`,
+    // and a bare following `block` collapses the leading parskip, so the first
+    // bullet's top climbs back over the org line's baseline (verified — they
+    // overlapped ~5pt in the rendered PDF). A forced `v(0.4em)` keeps a clean
+    // line of separation without the runaway spacing `above: 0.4em` produced.
     if bullets.len() > 0 {
+      v(0.4em)
       block[
         #set text(size: if is-fr { 9pt } else { 9.5pt })
         #set par(leading: 0.5em)
@@ -122,6 +128,7 @@
     entry(e.degree, e.venue, e.location, e.period, e.bullets)
   }
 
+  if is-fr { pagebreak() } else {}
   section(s.skills_title)
   prose(cv.skills)
 

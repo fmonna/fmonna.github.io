@@ -23,11 +23,31 @@ nav.site-nav a.draft.active { opacity: 0.85; }
 footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #8884; font-size: 0.85rem; opacity: 0.7; }
 
 /* Home */
+.home-header { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.5rem; }
+.home-header .home-text { flex: 1 1 18rem; min-width: 0; }
+.home-header .home-portrait { flex: 0 0 auto; }
+.home-portrait .portrait-svg { display: block; width: 7rem; height: 7rem; border-radius: 50%; }
 .home-header h1 { margin: 0.2rem 0; font-size: 2rem; }
-.home-header .title { margin: 0 0 0.6rem; color: var(--accent); font-weight: 600; }
-.home-header .contact { font-style: normal; font-size: 0.9rem; }
+.home-header .title { margin: 0 0 0.4rem; color: var(--accent); font-weight: 600; }
+.home-header .tagline { margin: 0 0 0.6rem; font-size: 1.1rem; opacity: 0.85; }
+.home-header .now-callout {
+  margin: 0 0 0.8rem; font-size: 0.95rem; padding: 0.35rem 0.7rem;
+  border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-radius: 0 4px 4px 0; display: inline-block;
+}
+.home-header .id-strip { display: flex; gap: 0.6rem; align-items: center; margin-bottom: 0.5rem; }
+.home-header .id-strip .id-link { color: inherit; display: inline-flex; }
+.home-header .id-strip .id-link:hover { color: var(--accent); }
+.home-header .contact { font-style: normal; font-size: 0.85rem; opacity: 0.7; }
 .home-header .contact a { color: inherit; }
 p.lead { margin-top: 1.5rem; }
+
+/* Visible keyboard focus on all interactive elements. */
+a:focus-visible, button:focus-visible, .id-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
 
 /* Timeline (experience / education) */
 section.timeline { display: flex; flex-direction: column; gap: 1.75rem; }

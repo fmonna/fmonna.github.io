@@ -3,7 +3,7 @@ id: argonne
 order: 3
 role:
   en: Lead Software Engineer
-  fr: Ingénieure logiciel Senior 
+  fr: Ingénieur logiciel Senior 
 company: Argonne National Laboratory
 location:
   en: Lemont, IL, USA

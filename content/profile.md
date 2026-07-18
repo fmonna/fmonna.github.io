@@ -8,8 +8,20 @@ name: Florence Monna
 title:
   en: PhD
   fr: Docteur
+# One-line identity shown as the hero subtitle. Falls back to `title` when empty.
+tagline:
+  en: HPC architect turning research into production systems.
+  fr: Architecte HPC, de la recherche aux systèmes en production.
 email: florence.monna@gmail.com
 linkedin: florencemonna          # https://linkedin.com/in/florencemonna
+github: fmonna                   # https://github.com/fmonna
+# Academic IDs — leave empty until set; an empty value hides the icon.
+scholar: ""                      # e.g. https://scholar.google.com/citations?user=XXXX
+orcid: ""                        # e.g. 0000-0000-0000-0000
+# "Currently …" one-liner shown as a callout under the hero. Hides when empty.
+now:
+  en: Currently HPC architect at EDF R&D.
+  fr: Actuellement architecte HPC chez EDF R&D.
 location:
   en: Maisons-Laffitte, France
   fr: Maisons-Laffitte, France

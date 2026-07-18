@@ -27,6 +27,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'Dioxus.toml'
+      - 'tools/**'
       - '.github/workflows/deploy-dioxus.yml'
   # Allow manual runs from the Actions tab.
   workflow_dispatch:
@@ -130,6 +131,33 @@ jobs:
 
           echo "Prerendered HTML files:"
           find "$PUB" -name '*.html' | sort
+
+      - name: Build CV PDFs and stage them in public/
+        # Regenerate the two CV PDFs from the same content/*.md the site is
+        # built from. build_cvs.sh writes them to tools/ AND stages them into
+        # the source-root public/ (for local dx serve). For deploy we also copy
+        # them into the bundled output public/ (the ISRG cache above, with
+        # clear_cache(false), already wrote the prerendered HTML there) so
+        # GitHub Pages serves /cv-en.pdf and /cv-fr.pdf as raw static files
+        # that bypass the router. gen_cv.py needs PyYAML; typst is a prebuilt
+        # binary (x86_64 in CI, aarch64 in dev — same release-redirect trick).
+        env:
+          TYPST: ./typst
+        run: |
+          set -euo pipefail
+          PUB="$(pwd)/target/dx/fmonna-site/debug/web/public"
+          python3 -m pip install --user pyyaml
+          TAG="$(curl -sI -o /dev/null -w '%{redirect_url}' \
+                 https://github.com/typst/typst/releases/latest \
+                 | sed -E 's#.*/tag/(v[0-9.]+.*)$#\1#')"
+          curl -sfL -o typst.tar.xz \
+            "https://github.com/typst/typst/releases/download/${TAG}/typst-x86_64-unknown-linux-musl.tar.xz"
+          tar -xJf typst.tar.xz
+          mv typst-x86_64-unknown-linux-musl/typst ./typst
+          chmod +x ./typst
+          ./tools/build_cvs.sh
+          cp tools/cv-en.pdf tools/cv-fr.pdf "$PUB/"
+          echo "Staged PDFs in output public/:"; ls -la "$PUB"/cv-*.pdf
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

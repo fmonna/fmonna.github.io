@@ -249,11 +249,20 @@ fn emit_profile(s: &mut String, p: &Yaml) {
     let loc_fr = p.get("location").and_then(|l| l.get("fr")).and_then(|v| v.as_str()).unwrap_or(loc_en);
     let title_en = p.get("title").and_then(|t| t.get("en")).and_then(|v| v.as_str()).unwrap_or("");
     let title_fr = p.get("title").and_then(|t| t.get("fr")).and_then(|v| v.as_str()).unwrap_or(title_en);
+    let tag_en = p.get("tagline").and_then(|t| t.get("en")).and_then(|v| v.as_str()).unwrap_or("");
+    let tag_fr = p.get("tagline").and_then(|t| t.get("fr")).and_then(|v| v.as_str()).unwrap_or(tag_en);
+    let now_en = p.get("now").and_then(|n| n.get("en")).and_then(|v| v.as_str()).unwrap_or("");
+    let now_fr = p.get("now").and_then(|n| n.get("fr")).and_then(|v| v.as_str()).unwrap_or(now_en);
     push_kv(s, "name", get("name"));
     push_kv(s, "email", get("email"));
     push_kv(s, "linkedin", get("linkedin"));
     push_kv(s, "phone", get("phone"));
+    push_kv(s, "github", get("github"));
+    push_kv(s, "scholar", get("scholar"));
+    push_kv(s, "orcid", get("orcid"));
     push_kv_loc(s, "title", title_en, title_fr);
+    push_kv_loc(s, "tagline", tag_en, tag_fr);
+    push_kv_loc(s, "now", now_en, now_fr);
     push_kv_loc(s, "location", loc_en, loc_fr);
 }
 
